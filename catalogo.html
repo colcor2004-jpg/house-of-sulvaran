@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo | HOUSE OF SULVARAN</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Estilos específicos del catálogo */
+        .catalogo-hero {
+            min-height: 38vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: linear-gradient(160deg, var(--black) 0%, var(--black-soft) 40%, var(--black) 100%);
+            padding: 90px 1rem 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .catalogo-hero::before {
+            content: '';
+            position: absolute;
+            top: -30%; left: -30%;
+            width: 160%; height: 160%;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.15) 0%, transparent 60%);
+        }
+        .catalogo-hero-content { position: relative; z-index: 2; }
+        .catalogo-hero h1 { font-size: clamp(1.6rem, 4vw, 3rem); margin-bottom: 0.4rem; }
+        .catalogo-hero p { color: var(--gray); font-size: 0.9rem; max-width: 500px; margin: 0 auto; }
+        .catalogo-hero .product-count { color: var(--gold); font-size: 0.7rem; letter-spacing: 2px; margin-top: 0.6rem; }
+
+        /* FILTROS - Desktop */
+        .catalogo-filters {
+            background: var(--black-soft);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.18);
+            padding: 0.8rem 4%;
+            position: sticky;
+            top: 60px;
+            z-index: 100;
+        }
+        .catalogo-filters-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .filter-group { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
+        .filter-group label { color: var(--gold); font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase; }
+        .filter-select, .filter-input {
+            padding: 0.4rem 0.6rem;
+            background: var(--black);
+            border: 1px solid rgba(0, 0, 0, 0.25);
+            color: var(--white);
+            font-family: 'Lato', sans-serif;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+            min-width: 120px;
+            border-radius: 3px;
+        }
+        .filter-select:focus, .filter-input:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+        .filter-input { min-width: 160px; }
+        .filter-btn {
+            padding: 0.4rem 0.8rem;
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            font-family: 'Lato', sans-serif;
+            font-size: 0.65rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 3px;
+        }
+        .filter-btn:hover { background: var(--gold); color: var(--black); }
+        .filter-btn.active { background: var(--gold); color: var(--black); }
+
+        /* FILTROS - Mobile compacto */
+        @media (max-width: 768px) {
+            .catalogo-hero {
+                min-height: 28vh;
+                padding: 80px 0.8rem 1rem;
+            }
+            .catalogo-hero h1 { font-size: 1.4rem; }
+            .catalogo-hero p { font-size: 0.8rem; }
+            .catalogo-hero .product-count { font-size: 0.6rem; margin-top: 0.4rem; }
+
+            .catalogo-filters {
+                padding: 0.5rem 3%;
+                top: 55px;
+            }
+            .catalogo-filters-inner {
+                gap: 0.35rem;
+                justify-content: center;
+            }
+            .filter-group {
+                gap: 0.2rem;
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+            .filter-group label {
+                font-size: 0.55rem;
+                letter-spacing: 1px;
+                display: none; /* Ocultar labels en mobile para ahorrar espacio */
+            }
+            .filter-select, .filter-input {
+                padding: 0.35rem 0.4rem;
+                font-size: 0.7rem;
+                min-width: 0;
+                flex: 1;
+            }
+            .filter-input {
+                min-width: 100px;
+                flex: 2;
+            }
+            .filter-btn {
+                padding: 0.35rem 0.5rem;
+                font-size: 0.6rem;
+                flex-shrink: 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .catalogo-filters-inner {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.3rem;
+            }
+            .filter-group {
+                width: 100%;
+            }
+            .filter-group:first-child {
+                grid-column: 1 / -1;
+            }
+            .filter-input, .filter-select {
+                width: 100%;
+            }
+            .filter-group:last-child {
+                grid-column: 1 / -1;
+                justify-content: center;
+            }
+        }
+
+        .catalogo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.8rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 4%;
+        }
+        @media (max-width: 768px) {
+            .catalogo-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                gap: 1rem;
+                padding: 1rem 3%;
+            }
+        }
+        .catalogo-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--gray);
+        }
+        .catalogo-empty h3 { color: var(--white); margin-bottom: 0.5rem; font-size: 1.3rem; }
+
+        /* Product detail modal */
+        .product-detail-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.92);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.35s ease;
+        }
+        .product-detail-overlay.active { opacity: 1; visibility: visible; }
+        .product-detail-modal {
+            background: var(--black-soft);
+            border: 1px solid rgba(0, 0, 0, 0.25);
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            transform: translateY(30px);
+            transition: all 0.35s ease;
+        }
+        .product-detail-overlay.active .product-detail-modal { transform: translateY(0); }
+        .product-detail-images {
+            position: relative;
+            background: var(--black);
+            min-height: 400px;
+        }
+        .product-detail-images img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .product-detail-thumbs {
+            position: absolute;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.4rem;
+        }
+        .product-detail-thumbs img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border: 2px solid transparent;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.3s;
+        }
+        .product-detail-thumbs img:hover,
+        .product-detail-thumbs img.active {
+            border-color: var(--gold);
+            opacity: 1;
+        }
+        .product-detail-info {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .product-detail-info .product-category {
+            color: var(--gold);
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+        .product-detail-info h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            color: var(--white);
+            margin-bottom: 0.8rem;
+            line-height: 1.2;
+        }
+        .product-detail-info .product-price {
+            font-size: 1.5rem;
+            color: var(--gold);
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .product-detail-info .product-desc {
+            color: var(--gray);
+            font-size: 0.9rem;
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+        .product-detail-info .product-detail-actions {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+        .product-detail-info .product-detail-actions a,
+        .product-detail-info .product-detail-actions button {
+            flex: 1;
+            min-width: 140px;
+            padding: 0.8rem 1.2rem;
+            text-align: center;
+            text-decoration: none;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            font-family: 'Lato', sans-serif;
+        }
+        .btn-whatsapp {
+            background: var(--whatsapp);
+            color: var(--white);
+        }
+        .btn-whatsapp:hover { background: #128C7E; }
+        .btn-back {
+            background: transparent;
+            border: 1px solid var(--gold) !important;
+            color: var(--gold);
+        }
+        .btn-back:hover { background: var(--gold); color: var(--black); }
+        .btn-disabled {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--gray);
+            cursor: not-allowed !important;
+        }
+        .product-detail-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 36px;
+            height: 36px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 1.4rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transition: all 0.3s;
+        }
+        .product-detail-close:hover { background: rgba(0, 0, 0, 0.9); border-color: var(--gold); color: var(--gold); }
+
+        @media (max-width: 768px) {
+            .product-detail-modal { grid-template-columns: 1fr; }
+            .product-detail-images { min-height: 280px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="index.html" class="logo-area">
+                <img src="logo.jpg" alt="HOUSE OF SULVARAN" class="logo-img">
+                <span class="logo-text">HOUSE <span>OF SULVARAN</span></span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="catalogo.html" style="color:var(--gold)">Productos</a></li>
+                <li><a href="index.html#noticias">Noticias</a></li>
+                <li><a href="index.html#contacto">Contacto</a></li>
+                <li><a href="login.html" class="nav-btn" id="loginBtn">Ingresar</a></li>
+                <li><a href="admin.html" class="nav-btn admin-btn hidden" id="adminBtn">Admin</a></li>
+                <li><button class="nav-btn hidden" id="logoutBtn" onclick="logout()">Salir</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="catalogo-hero">
+        <div class="catalogo-hero-content">
+            <p class="hero-subtitle" style="opacity:1;animation:none;">Nuestra Colección Completa</p>
+            <h1>Catálogo de <span class="gold-text">Productos</span></h1>
+            <p>Explora todos nuestros relojes, perfumes, ropa y calzado de alta gama.</p>
+            <p class="product-count" id="catalogoCount">Cargando productos...</p>
+        </div>
+    </section>
+
+    <!-- FILTERS -->
+    <div class="catalogo-filters">
+        <div class="catalogo-filters-inner">
+            <div class="filter-group">
+                <input type="text" class="filter-input" id="searchInput" placeholder="🔍 Buscar producto...">
+            </div>
+            <div class="filter-group">
+                <select class="filter-select" id="categoryFilter">
+                    <option value="">Todas las categorías</option>
+                    <option value="Reloj">Relojes</option>
+                    <option value="Perfume">Perfumes</option>
+                    <option value="Ropa">Ropa</option>
+                    <option value="Zapato">Zapatos</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <select class="filter-select" id="statusFilter">
+                    <option value="">Todos los estados</option>
+                    <option value="disponible">Disponible</option>
+                    <option value="agotado">Agotado</option>
+                    <option value="bajo pedido">Bajo Pedido</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <select class="filter-select" id="sortFilter">
+                    <option value="newest">Más recientes</option>
+                    <option value="price-asc">Precio: menor → mayor</option>
+                    <option value="price-desc">Precio: mayor → menor</option>
+                    <option value="name">Nombre A-Z</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <button class="filter-btn" onclick="clearFilters()">Limpiar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRODUCTS GRID -->
+    <div class="catalogo-grid" id="catalogoGrid"></div>
+
+    <!-- PRODUCT DETAIL MODAL -->
+    <div class="product-detail-overlay" id="productDetailOverlay" onclick="closeProductDetail(event)">
+        <div class="product-detail-modal" onclick="event.stopPropagation()">
+            <button class="product-detail-close" onclick="closeProductDetail()">×</button>
+            <div class="product-detail-images">
+                <img src="" alt="" id="detailMainImage">
+                <div class="product-detail-thumbs" id="detailThumbs"></div>
+            </div>
+            <div class="product-detail-info">
+                <p class="product-category" id="detailCategory"></p>
+                <div id="detailStatus"></div>
+                <h2 id="detailName"></h2>
+                <p class="product-price" id="detailPrice"></p>
+                <p class="product-desc" id="detailDesc"></p>
+                <div class="product-detail-actions" id="detailActions"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <a href="index.html" class="logo-area">
+                    <img src="logo.jpg" alt="HOUSE OF SULVARAN" class="logo-img" style="width:32px;height:32px;">
+                    <span class="logo-text" style="font-size:1.1rem;">HOUSE <span>OF SULVARAN</span></span>
+                </a>
+                <p>Relojes y perfumes de alta gama. Calidad, elegancia y distinción en cada pieza.</p>
+            </div>
+            <div>
+                <h4 class="footer-title">Categorías</h4>
+                <ul class="footer-links">
+                    <li><a href="catalogo.html?cat=Reloj">Relojes</a></li>
+                    <li><a href="catalogo.html?cat=Perfume">Perfumes</a></li>
+                    <li><a href="catalogo.html?cat=Ropa">Ropas</a></li>
+                    <li><a href="catalogo.html?cat=Zapato">Zapatos</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="footer-title">Empresa</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html#nosotros">Sobre Nosotros</a></li>
+                    <li><a href="index.html#noticias">Noticias</a></li>
+                    <li><a href="index.html#contacto">Contacto</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="footer-title">Síguenos</h4>
+                <ul class="footer-links">
+                    <li><a href="https://wa.me/584241403937" target="_blank">WhatsApp</a></li>
+                    <li><a href="https://www.tiktok.com/@house.sulvaran" target="_blank">TikTok</a></li>
+                    <li><a href="https://www.instagram.com/houseofsulvaran/" target="_blank">Instagram</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 HOUSE OF SULVARAN. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="data.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="firebase-sync.js"></script>
+    <script src="catalogo.js"></script>
+</body>
+</html>

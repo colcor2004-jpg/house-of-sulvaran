@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOUSE OF SULVARAN | Relojes y Perfumes de Alta Gama</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="index.html" class="logo-area">
+                <img src="logo.jpg" alt="HOUSE OF SULVARAN" class="logo-img">
+                <span class="logo-text">HOUSE <span>OF SULVARAN</span></span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#inicio">Inicio</a></li>
+                <li><a href="catalogo.html">Productos</a></li>
+                <li><a href="#noticias">Noticias</a></li>
+                <li><a href="#contacto">Contacto</a></li>
+                <li><a href="login.html" class="nav-btn" id="loginBtn">Ingresar</a></li>
+                <li><a href="admin.html" class="nav-btn admin-btn hidden" id="adminBtn">Admin</a></li>
+                <li><button class="nav-btn hidden" id="logoutBtn" onclick="logout()">Salir</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero" id="inicio">
+        <div class="hero-content">
+            <img src="logo.jpg" alt="HOUSE OF SULVARAN" class="hero-logo">
+            <p class="hero-subtitle" id="heroSubtitle">Elegancia y Distinción</p>
+            <h1 class="hero-title" id="heroTitle">Relojes, Perfumes, Ropa y Calzado de <span class="gold-text">Alta Gama</span></h1>
+            <p class="hero-desc" id="heroDesc">Productos Relojes Perfumes Ropas y calzados. Pagos mediante transferencias, pago móvil, divisas y USDT.</p>
+            <div class="hero-contact">
+                <a href="https://wa.me/584241403937" target="_blank" class="hero-btn whatsapp-btn" onclick="trackWhatsAppClick(event)">💬 WhatsApp</a>
+                <a href="catalogo.html" class="hero-btn">Ver Catálogo</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRODUCTS (Destacados - solo 6) -->
+    <section class="section" id="productos">
+        <div class="section-header">
+            <span class="section-label">Nuestra Colección</span>
+            <h2 class="section-title" id="productsTitle">Productos Destacados</h2>
+            <div class="section-line"></div>
+        </div>
+        <div class="products-grid" id="productsGrid"></div>
+        <div style="text-align:center;margin-top:2rem;">
+            <a href="catalogo.html" class="hero-btn" style="display:inline-block;">Ver Catálogo Completo →</a>
+        </div>
+    </section>
+
+    <!-- NEWS -->
+    <section class="news-section" id="noticias">
+        <div class="section-header">
+            <span class="section-label">Últimas Novedades</span>
+            <h2 class="section-title" id="newsTitle">Noticias y Promociones</h2>
+            <div class="section-line"></div>
+        </div>
+        <div class="news-grid" id="newsGrid"></div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="about-section" id="nosotros">
+        <div class="about-inner">
+            <img src="https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=800&q=80" alt="HOUSE OF SULVARAN" class="about-image" id="aboutImage">
+            <div class="about-content">
+                <span class="section-label">Sobre Nosotros</span>
+                <h2 id="aboutTitle">JS <span class="gold-text">PRENDAS</span></h2>
+                <p id="aboutText1">Somos tu destino de confianza para relojes, perfumes, ropas y calzados de alta gama en Venezuela. Seleccionamos cada pieza con criterio exigente para ofrecerte solo lo mejor del mercado.</p>
+                <p id="aboutText2">Envíos a toda Venezuela. Atención personalizada por WhatsApp. Pagos mediante transferencias, pago móvil, divisas y USDT. Productos 100% originales con garantía de satisfacción.</p>
+                <div class="about-stats">
+                    <div class="stat-item"><h3 id="stat1Value">100%</h3><p id="stat1Label">Originales</p></div>
+                    <div class="stat-item"><h3 id="stat2Value">+500</h3><p id="stat2Label">Clientes</p></div>
+                    <div class="stat-item"><h3 id="stat3Value">24/7</h3><p id="stat3Label">Atención</p></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="contact-section" id="contacto">
+        <div class="section-header">
+            <span class="section-label">Estamos para ti</span>
+            <h2 class="section-title">Contáctanos</h2>
+            <div class="section-line"></div>
+        </div>
+        <div class="contact-grid">
+            <div class="contact-info">
+                <h3>¿Tienes alguna pregunta?</h3>
+                <p>Escríbenos por cualquiera de nuestros canales. Te atenderemos con gusto y te ayudaremos a encontrar el reloj o perfume perfecto para ti.</p>
+                <div class="contact-item">
+                    <div class="contact-icon">📱</div>
+                    <div><strong>WhatsApp</strong><br><a href="https://wa.me/584241403937" target="_blank" onclick="trackWhatsAppClick(event)">+58 424-1403937</a></div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">📍</div>
+                    <div><strong>Ubicación</strong><br><span id="contactLocation">Venezuela - Envíos a todo el país</span></div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">🕐</div>
+                    <div><strong>Horario</strong><br><span id="contactHours">Lunes a Domingo - 24 horas</span></div>
+                </div>
+                <div class="social-links">
+                    <a href="https://wa.me/584241403937" target="blank" class="social-btn whatsapp" onclick="trackWhatsAppClick(event)">WhatsApp</a>
+                    <a href="https://www.tiktok.com/@house.sulvaran" target="_blank" class="social-btn" id="tiktokLink">TikTok</a>
+                    <a href="https://www.instagram.com/houseofsulvaran/" target="_blank" class="social-btn" id="instagramLink">Instagram</a>
+                </div>
+            </div>
+            <div>
+                <img src="https://images.unsplash.com/photo-1587836374828-4dbafa94cf0e?w=800&q=80" alt="Contacto" style="width:100%;height:350px;object-fit:cover;border:1px solid rgba(201,168,76,0.15);">
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <a href="index.html" class="logo-area">
+                    <img src="logo.jpg" alt="HOUSE OF SULVARAN" class="logo-img" style="width:32px;height:32px;">
+                    <span class="logo-text" style="font-size:1.1rem;">HOUSE <span>OF SULVARAN</span></span>
+                </a>
+                <p>Relojes y perfumes de alta gama. Calidad, elegancia y distinción en cada pieza.</p>
+            </div>
+            <div>
+                <h4 class="footer-title">Categorías</h4>
+                <ul class="footer-links">
+                    <li><a href="catalogo.html?cat=Reloj">Relojes</a></li>
+                    <li><a href="catalogo.html?cat=Perfume">Perfumes</a></li>
+                    <li><a href="catalogo.html?cat=Ropa">Ropas</a></li>
+                    <li><a href="catalogo.html?cat=Zapato">Zapatos</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="footer-title">Empresa</h4>
+                <ul class="footer-links">
+                    <li><a href="#nosotros">Sobre Nosotros</a></li>
+                    <li><a href="#noticias">Noticias</a></li>
+                    <li><a href="#contacto">Contacto</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="footer-title">Síguenos</h4>
+                <ul class="footer-links">
+                    <li><a href="https://wa.me/584241403937" target="_blank" onclick="trackWhatsAppClick(event)">WhatsApp</a></li>
+                    <li><a href="https://www.tiktok.com/@house.sulvaran" target="_blank" id="footerTiktok">TikTok</a></li>
+                    <li><a href="https://www.instagram.com/houseofsulvaran/" target="_blank" id="footerInstagram">Instagram</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 HOUSE OF SULVARAN. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="data.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="firebase-sync.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

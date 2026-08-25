@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin | HOUSE OF SULVARAN</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="admin-page">
+        <!-- SIDEBAR -->
+        <aside class="admin-sidebar">
+            <span class="logo-text">HOUSE <span>OF SULVARAN</span></span>
+            <ul class="admin-nav">
+                <li><a href="#" class="active" onclick="showSection('products', this)">📦 Productos</a></li>
+                <li><a href="#" onclick="showSection('content', this)">📝 Contenido del Sitio</a></li>
+                <li><a href="#" onclick="showSection('news', this)">📰 Noticias</a></li>
+                <li><a href="#" onclick="showSection('clients', this)" id="clientsNavItem" style="display:none;">👥 Clientes</a></li>
+                <li><a href="index.html">🏠 Ver Sitio Público</a></li>
+            </ul>
+            <div class="admin-user">
+                <div class="admin-user-name" id="adminName">Admin</div>
+                <div class="admin-user-role">Administrador</div>
+                <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="admin-main">
+            <!-- PRODUCTS SECTION -->
+            <div id="productsSection">
+                <div class="admin-header">
+                    <h1>Gestión de Productos</h1>
+                    <div id="firebaseStatus" style="margin-right:auto;margin-left:1rem;"></div>
+                    <div class="admin-header-actions">
+                        <button class="admin-btn-secondary" onclick="resetProducts()">Restaurar Demo</button>
+                        <button class="admin-btn-secondary" onclick="exportDataJS()" title="Descarga data.js para subir a tu hosting">📤 Exportar data.js</button>
+                        <button class="admin-btn-primary" onclick="openProductModal()">+ Nuevo Producto</button>
+                    </div>
+                </div>
+                <div class="admin-stats" style="grid-template-columns: repeat(6, 1fr);">
+                    <div class="stat-card"><div class="stat-card-value" id="statTotal">0</div><div class="stat-card-label">Total Productos</div></div>
+                    <div class="stat-card"><div class="stat-card-value" id="statWatches">0</div><div class="stat-card-label">Relojes</div></div>
+                    <div class="stat-card"><div class="stat-card-value" id="statPerfumes">0</div><div class="stat-card-label">Perfumes</div></div>
+                    <div class="stat-card"><div class="stat-card-value" id="statClothes">0</div><div class="stat-card-label">Ropa</div></div>
+                    <div class="stat-card"><div class="stat-card-value" id="statShoes">0</div><div class="stat-card-label">Zapatos</div></div>
+                    <div class="stat-card"><div class="stat-card-value" id="statValue">$0</div><div class="stat-card-label">Valor Total</div></div>
+                </div>
+                <div class="admin-stats" id="statExtraRow" style="grid-template-columns: repeat(3, 1fr); margin-top:0.8rem;"></div>
+                <div class="admin-table-container" style="margin-top:1.2rem;">
+                    <table class="admin-table">
+                        <thead><tr><th>Img</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Estado</th><th>Descripción</th><th>Acciones</th></tr></thead>
+                        <tbody id="productsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- CONTENT SECTION -->
+            <div id="contentSection" class="hidden">
+                <div class="admin-header"><h1>Editar Contenido del Sitio</h1></div>
+                <div class="content-editor">
+                    <h3 style="margin-bottom:1rem;font-size:1.1rem;">🎯 Sección Hero (Inicio)</h3>
+                    <div class="form-group"><label>Subtítulo del Hero</label><input type="text" id="heroSubtitleInput"></div>
+                    <div class="form-group"><label>Título del Hero</label><input type="text" id="heroTitleInput"></div>
+                    <div class="form-group"><label>Descripción del Hero</label><textarea id="heroDescInput"></textarea></div>
+
+                    <h3 style="margin:1.5rem 0 1rem;font-size:1.1rem;">📦 Sección Productos</h3>
+                    <div class="form-group"><label>Título de la sección de productos</label><input type="text" id="productsTitleInput"></div>
+
+                    <h3 style="margin:1.5rem 0 1rem;font-size:1.1rem;">📰 Sección Noticias</h3>
+                    <div class="form-group"><label>Título de la sección de noticias</label><input type="text" id="newsTitleInput"></div>
+
+                    <h3 style="margin:1.5rem 0 1rem;font-size:1.1rem;">🏢 Sección Nosotros</h3>
+                    <div class="form-group"><label>Título de la sección Nosotros</label><input type="text" id="aboutTitleInput"></div>
+                    <div class="form-group"><label>Párrafo 1 - Sobre Nosotros</label><textarea id="aboutText1Input"></textarea></div>
+                    <div class="form-group"><label>Párrafo 2 - Sobre Nosotros</label><textarea id="aboutText2Input"></textarea></div>
+                    <div class="form-group"><label>URL Imagen Nosotros</label><input type="text" id="aboutImageInput" placeholder="https://..."></div>
+                    <div class="form-group">
+                        <label>Subir imagen de Nosotros desde tu dispositivo</label>
+                        <div class="drop-zone" id="aboutDropZone">
+                            <div class="drop-zone-content">
+                                <div class="drop-zone-icon">📁</div>
+                                <p>Arrastra una imagen aquí o haz clic para seleccionar</p>
+                                <span class="drop-zone-hint">JPG, PNG, WEBP (máx. 5MB)</span>
+                            </div>
+                            <input type="file" id="aboutImageFile" accept="image/*" style="display:none;">
+                        </div>
+                        <img id="aboutImagePreview" class="image-preview" src="" alt="Preview">
+                    </div>
+
+                    <h3 style="margin:1.5rem 0 1rem;font-size:1.1rem;">📊 Sección Estadísticas (Sobre Nosotros)</h3>
+                    <div class="form-group"><label>Stat 1 - Valor</label><input type="text" id="stat1ValueInput" placeholder="Ej: 100%"></div>
+                    <div class="form-group"><label>Stat 1 - Etiqueta</label><input type="text" id="stat1LabelInput" placeholder="Ej: Originales"></div>
+                    <div class="form-group"><label>Stat 2 - Valor</label><input type="text" id="stat2ValueInput" placeholder="Ej: +500"></div>
+                    <div class="form-group"><label>Stat 2 - Etiqueta</label><input type="text" id="stat2LabelInput" placeholder="Ej: Clientes"></div>
+                    <div class="form-group"><label>Stat 3 - Valor</label><input type="text" id="stat3ValueInput" placeholder="Ej: 24/7"></div>
+                    <div class="form-group"><label>Stat 3 - Etiqueta</label><input type="text" id="stat3LabelInput" placeholder="Ej: Atención"></div>
+                    <p style="color:var(--gray);font-size:0.75rem;margin-bottom:1rem;">💡 Si Stat 2 dice "Clientes" o "Consultas", el contador de clics en WhatsApp se sumará automáticamente aquí.</p>
+
+                    <h3 style="margin:1.5rem 0 1rem;font-size:1.1rem;">📞 Sección Contacto</h3>
+                    <div class="form-group"><label>Ubicación / Envíos</label><input type="text" id="contactLocationInput"></div>
+                    <div class="form-group"><label>Horario de atención</label><input type="text" id="contactHoursInput"></div>
+                    <div class="form-group"><label>Enlace TikTok</label><input type="text" id="tiktokUrlInput" placeholder="https://www.tiktok.com/@house.sulvaran/@usuario"></div>
+                    <div class="form-group"><label>Enlace Instagram</label><input type="text" id="instagramUrlInput" placeholder="https://www.instagram.com/houseofsulvaran//usuario"></div>
+
+                    <button class="admin-btn-primary" onclick="saveContent()" style="margin-top:0.5rem;">💾 Guardar Todo el Contenido</button>
+                </div>
+            </div>
+
+            <!-- NEWS SECTION -->
+            <div id="newsSection" class="hidden">
+                <div class="admin-header"><h1>Gestión de Noticias y Publicaciones</h1><div class="admin-header-actions"><button class="admin-btn-primary" onclick="openNewsModal()">+ Nueva Publicación</button></div></div>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead><tr><th>Fecha</th><th>Título</th><th>Categoría</th><th>Contenido</th><th>Acciones</th></tr></thead>
+                        <tbody id="newsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- CLIENTS SECTION (Firebase only) -->
+            <div id="clientsSection" class="hidden">
+                <div class="admin-header"><h1>Clientes Registrados</h1><div class="admin-header-actions"><button class="admin-btn-secondary" onclick="loadClients()">🔄 Actualizar</button></div></div>
+                <div class="admin-stats" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="stat-card"><div class="stat-card-value" id="clientTotal">0</div><div class="stat-card-label">Total Clientes</div></div>
+                    <div class="stat-card"><div class="stat-card-value" id="clientGoogle">0</div><div class="stat-card-label">Google</div></div>
+                    <div class="stat-card"><div class="stat-card-value" id="clientEmail">0</div><div class="stat-card-label">Email/Teléfono</div></div>
+                </div>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead><tr><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Método</th><th>Fecha de registro</th></tr></thead>
+                        <tbody id="clientsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- PRODUCT MODAL -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal">
+            <div class="modal-header"><h2 id="productModalTitle">Nuevo Producto</h2><button class="modal-close" onclick="closeProductModal()">&times;</button></div>
+            <form id="productForm">
+                <input type="hidden" id="productId">
+                <div class="form-group"><label>Nombre del Producto</label><input type="text" id="productName" required></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;">
+                    <div class="form-group"><label>Categoría</label><select id="productCategory"><option value="Reloj">Reloj</option><option value="Perfume">Perfume</option><option value="Ropa">Ropa</option><option value="Zapato">Zapato</option></select></div>
+                    <div class="form-group"><label>Estado</label><select id="productStatus"><option value="disponible">✅ Disponible</option><option value="agotado">❌ Agotado</option><option value="bajo pedido">📦 Bajo Pedido</option></select></div>
+                </div>
+                <div class="form-group"><label>Precio (USD)</label><input type="number" id="productPrice" min="0" step="0.01" required></div>
+                <div class="form-group"><label>Descripción</label><textarea id="productDesc" required></textarea></div>
+                <div class="form-group">
+                    <label>URL de imagen principal (alternativa a subir)</label>
+                    <input type="text" id="productImageUrl" placeholder="https://... (pega link de Imgur, Cloudinary, etc.)">
+                    <p style="color:var(--gray);font-size:0.65rem;margin-top:0.2rem;">💡 Para imágenes grandes (>5MB), súbelas a Imgur/Cloudinary y pega el link aquí.</p>
+                </div>
+                <div class="form-group">
+                    <label>Galería de Imágenes (máx. 3)</label>
+                    <div class="product-gallery" id="productGallery">
+                        <div class="gallery-slot" data-index="0">
+                            <div class="gallery-placeholder" onclick="openGallerySlot(0)">
+                                <span>+</span>
+                                <small>Imagen 1</small>
+                            </div>
+                            <img class="gallery-img" src="" alt="" style="display:none;">
+                            <button type="button" class="gallery-remove" onclick="removeGalleryImage(0, event)">×</button>
+                        </div>
+                        <div class="gallery-slot" data-index="1">
+                            <div class="gallery-placeholder" onclick="openGallerySlot(1)">
+                                <span>+</span>
+                                <small>Imagen 2</small>
+                            </div>
+                            <img class="gallery-img" src="" alt="" style="display:none;">
+                            <button type="button" class="gallery-remove" onclick="removeGalleryImage(1, event)">×</button>
+                        </div>
+                        <div class="gallery-slot" data-index="2">
+                            <div class="gallery-placeholder" onclick="openGallerySlot(2)">
+                                <span>+</span>
+                                <small>Imagen 3</small>
+                            </div>
+                            <img class="gallery-img" src="" alt="" style="display:none;">
+                            <button type="button" class="gallery-remove" onclick="removeGalleryImage(2, event)">×</button>
+                        </div>
+                        
+                    </div>
+                    <input type="file" id="galleryFileInput" accept="image/*" style="display:none;" onchange="handleGalleryFile(this)">
+                    <p style="color:var(--gray);font-size:0.7rem;margin-top:0.3rem;">Haz clic en + para subir o arrastra imágenes. Máx. 4. Cada imagen máx. 5MB.</p>
+                </div>
+                <input type="hidden" id="productImages" value="">
+                <div class="modal-actions"><button type="button" class="modal-btn-cancel" onclick="closeProductModal()">Cancelar</button><button type="submit" class="modal-btn-save">Guardar Producto</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- NEWS MODAL -->
+    <div class="modal-overlay" id="newsModal">
+        <div class="modal">
+            <div class="modal-header"><h2 id="newsModalTitle">Nueva Publicación</h2><button class="modal-close" onclick="closeNewsModal()">&times;</button></div>
+            <form id="newsForm">
+                <input type="hidden" id="newsId">
+                <div class="form-group"><label>Título de la Publicación</label><input type="text" id="newsTitleField" required></div>
+                <div class="form-group"><label>Categoría / Etiqueta</label><select id="newsCategoryField"><option value="Promoción">Promoción</option><option value="Novedad">Novedad</option><option value="Venta">Venta</option><option value="Información">Información</option></select></div>
+                <div class="form-group"><label>Contenido / Descripción</label><textarea id="newsContentField" required></textarea></div>
+                <div class="form-group"><label>Fecha (opcional, dejar vacío para hoy)</label><input type="date" id="newsDateField"></div>
+                <div class="modal-actions"><button type="button" class="modal-btn-cancel" onclick="closeNewsModal()">Cancelar</button><button type="submit" class="modal-btn-save">Guardar Publicación</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="data.js"></script>
+    <script src="firebase-sync.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
