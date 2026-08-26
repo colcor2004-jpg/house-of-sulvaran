@@ -26,15 +26,26 @@ let firebaseDb = null;
 
 function initFirebase() {
     if (!isFirebaseConfigured()) return false;
-    if (firebaseApp) return true;
+
+    // CORRECCIÓN CRÍTICA: verificar que TODOS los servicios estén inicializados,
+    // no solo firebaseApp. Esto evita el bug donde firebaseDb quedaba null
+    // y las siguientes llamadas retornaban true sin arreglarlo.
+    if (firebaseApp && firebaseAuth && firebaseDb) return true;
+
     try {
-        firebaseApp = firebase.initializeApp(firebaseConfig);
-        firebaseAuth = firebase.auth();
-        firebaseDb = firebase.firestore();
+        if (!firebaseApp) {
+            firebaseApp = firebase.initializeApp(firebaseConfig);
+        }
+        if (!firebaseAuth) {
+            firebaseAuth = firebase.auth();
+        }
+        if (!firebaseDb) {
+            firebaseDb = firebase.firestore();
+        }
         console.log('🔥 Firebase inicializado correctamente');
         return true;
     } catch (e) {
-        console.error('Error inicializando Firebase:', e);
+        console.error('❌ Error inicializando Firebase:', e);
         return false;
     }
 }

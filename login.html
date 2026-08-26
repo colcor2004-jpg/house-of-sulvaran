@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -157,25 +157,30 @@
             const firebaseActive = initFirebase();
             const statusDiv = document.getElementById('firebaseStatus');
 
-            // MODO SIN REGISTRO DE CLIENTES:
-            // Solo mostramos login de Admin. Ocultamos Google/Email/Teléfono.
             if (firebaseActive) {
                 document.getElementById('firebaseAuthSection').style.display = 'block';
                 document.getElementById('localAuthSection').style.display = 'none';
-                statusDiv.innerHTML = '<span class="firebase-badge">🔒 Panel de Administración</span>';
+                statusDiv.innerHTML = '<span class="firebase-badge">🔥 Firebase activo — Clientes + Admin</span>';
 
-                // Ocultar tabs de autenticación social (Google, Email, Teléfono)
-                const tabs = document.querySelectorAll('.auth-tab');
-                tabs.forEach((tab, index) => {
-                    if (index < 3) tab.style.display = 'none'; // Ocultar Google, Email, Teléfono
+                // Observar estado de autenticación
+                firebaseAuth.onAuthStateChanged(user => {
+                    if (user) {
+                        // Usuario de Firebase autenticado
+                        localStorage.setItem('housesulvaranUser', JSON.stringify({
+                            uid: user.uid,
+                            name: user.displayName || user.phoneNumber || user.email,
+                            email: user.email,
+                            phone: user.phoneNumber,
+                            photo: user.photoURL,
+                            role: 'client',
+                            provider: user.providerData[0]?.providerId || 'unknown',
+                            loginTime: new Date().toISOString()
+                        }));
+                        // Guardar perfil en Firestore
+                        saveUserProfile(user);
+                        window.location.href = 'index.html';
+                    }
                 });
-
-                // Mostrar solo el panel de Admin
-                document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
-                document.getElementById('panel-admin').classList.add('active');
-
-                // NO observar estado de autenticación de clientes
-                // (eliminado onAuthStateChanged para evitar registro automático)
             } else {
                 document.getElementById('firebaseAuthSection').style.display = 'none';
                 document.getElementById('localAuthSection').style.display = 'block';
@@ -183,13 +188,22 @@
             }
         }
 
-        // Guardar perfil en Firestore — DESACTIVADO temporalmente
+        // Guardar perfil en Firestore
         async function saveUserProfile(user) {
-            // Desactivado: registro de clientes no habilitado todavía
-            // if (!firebaseDb) return;
-            // try {
-            //     await firebaseDb.collection('users').doc(user.uid).set({...});
-            // } catch (e) { console.error('Error guardando perfil:', e); }
+            if (!firebaseDb) return;
+            try {
+                await firebaseDb.collection('users').doc(user.uid).set({
+                    name: user.displayName || document.getElementById('emailName')?.value || 'Cliente',
+                    email: user.email || null,
+                    phone: user.phoneNumber || null,
+                    photoURL: user.photoURL || null,
+                    provider: user.providerData[0]?.providerId || 'unknown',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            } catch (e) {
+                console.error('Error guardando perfil:', e);
+            }
         }
 
         // Tabs
@@ -201,41 +215,75 @@
             document.getElementById('loginError').style.display = 'none';
         }
 
-        // Google Sign-In — DESACTIVADO
+        // Google Sign-In
         function signInWithGoogle() {
-            alert('El registro de clientes no está habilitado todavía.');
-            // const provider = new firebase.auth.GoogleAuthProvider();
-            // firebaseAuth.signInWithPopup(provider).catch(err => {
-            //     showError('Error con Google: ' + err.message);
-            // });
+            const provider = new firebase.auth.GoogleAuthProvider();
+            firebaseAuth.signInWithPopup(provider).catch(err => {
+                showError('Error con Google: ' + err.message);
+            });
         }
 
-        // Email/Password — DESACTIVADO
+        // Email/Password
         function toggleEmailMode() {
-            alert('El registro de clientes no está habilitado todavía.');
-            // isEmailLogin = !isEmailLogin;
-            // document.getElementById('emailSubmitBtn').textContent = isEmailLogin ? 'Iniciar sesión' : 'Registrarme';
-            // ...
+            isEmailLogin = !isEmailLogin;
+            document.getElementById('emailSubmitBtn').textContent = isEmailLogin ? 'Iniciar sesión' : 'Registrarme';
+            document.querySelector('#panel-email .switch-mode a').textContent = isEmailLogin ? 'Crear cuenta' : 'Iniciar sesión';
+            const nameField = document.getElementById('emailName');
+            nameField.parentElement.style.display = isEmailLogin ? 'none' : 'block';
         }
 
         document.getElementById('emailForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            alert('El registro de clientes no está habilitado todavía.');
-            // const email = document.getElementById('emailField').value.trim();
-            // ...
+            const email = document.getElementById('emailField').value.trim();
+            const password = document.getElementById('emailPassword').value;
+            const name = document.getElementById('emailName').value.trim();
+
+            if (isEmailLogin) {
+                firebaseAuth.signInWithEmailAndPassword(email, password).catch(err => {
+                    showError('Error: ' + err.message);
+                });
+            } else {
+                firebaseAuth.createUserWithEmailAndPassword(email, password)
+                    .then(cred => {
+                        return cred.user.updateProfile({ displayName: name || 'Cliente' });
+                    })
+                    .catch(err => {
+                        showError('Error: ' + err.message);
+                    });
+            }
         });
 
-        // Teléfono — DESACTIVADO
+        // Teléfono
         function sendPhoneCode() {
-            alert('El registro de clientes no está habilitado todavía.');
-            // const phoneNumber = document.getElementById('phoneNumber').value.trim();
-            // ...
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            if (!phoneNumber) { showError('Ingresa un número de teléfono'); return; }
+
+            const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+                size: 'invisible',
+                callback: () => {}
+            });
+
+            firebaseAuth.signInWithPhoneNumber(phoneNumber, appVerifier)
+                .then(result => {
+                    confirmationResult = result;
+                    document.getElementById('phone-step-1').classList.remove('active');
+                    document.getElementById('phone-step-2').classList.add('active');
+                    showError('Código enviado a ' + phoneNumber, 'success');
+                })
+                .catch(err => {
+                    showError('Error: ' + err.message);
+                    appVerifier.clear();
+                });
         }
 
         function verifyPhoneCode() {
-            alert('El registro de clientes no está habilitado todavía.');
-            // const code = document.getElementById('phoneCode').value.trim();
-            // ...
+            const code = document.getElementById('phoneCode').value.trim();
+            if (!code) { showError('Ingresa el código'); return; }
+            if (!confirmationResult) { showError('Primero solicita un código'); return; }
+
+            confirmationResult.confirm(code).catch(err => {
+                showError('Código incorrecto: ' + err.message);
+            });
         }
 
         function resetPhone() {

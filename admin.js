@@ -144,11 +144,8 @@ function getStatusDot(status) {
 function initFirebaseAdmin() {
     if (typeof initFirebase === 'function' && initFirebase()) {
         firebaseEnabled = true;
-
-        // REGISTRO DE CLIENTES DESACTIVADO:
-        // No mostramos la pestaña de clientes todavía
-        // const clientsNav = document.getElementById('clientsNavItem');
-        // if (clientsNav) clientsNav.style.display = 'block';
+        const clientsNav = document.getElementById('clientsNavItem');
+        if (clientsNav) clientsNav.style.display = 'block';
 
         // Mostrar badge de estado de Firestore
         const statusDiv = document.getElementById('firebaseStatus');
@@ -443,11 +440,55 @@ async function deleteNews(id) {
     renderNewsTable();
 }
 
-// ===== CLIENTES (Firebase) — DESACTIVADO =====
+// ===== CLIENTS (Firebase) =====
 async function loadClients() {
-    // REGISTRO DE CLIENTES DESACTIVADO temporalmente
-    alert('La sección de clientes no está habilitada todavía.');
-    return;
+    if (!firebaseEnabled || !firebaseDb) {
+        alert('Firebase no está configurado. Configúralo en firebase-config.js para ver clientes.');
+        return;
+    }
+    const tbody = document.getElementById('clientsTableBody');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray);padding:2rem;">Cargando clientes...</td></tr>';
+
+    try {
+        const snapshot = await firebaseDb.collection('users').orderBy('createdAt', 'desc').get();
+        const clients = [];
+        let googleCount = 0;
+        let otherCount = 0;
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            clients.push(data);
+            if (data.provider && data.provider.includes('google')) googleCount++;
+            else otherCount++;
+        });
+
+        document.getElementById('clientTotal').textContent = clients.length;
+        document.getElementById('clientGoogle').textContent = googleCount;
+        document.getElementById('clientEmail').textContent = otherCount;
+
+        if (clients.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray);padding:2.5rem;">No hay clientes registrados aún.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = clients.map(c => {
+            const date = c.createdAt ? (c.createdAt.toDate ? c.createdAt.toDate().toLocaleDateString('es-VE') : new Date(c.createdAt).toLocaleDateString('es-VE')) : 'N/A';
+            const providerIcon = c.provider && c.provider.includes('google') ? '🔵 Google' : 
+                                c.provider && c.provider.includes('phone') ? '📱 Teléfono' : '📧 Email';
+            return `
+                <tr>
+                    <td><strong>${c.name || 'Sin nombre'}</strong></td>
+                    <td>${c.email || '—'}</td>
+                    <td>${c.phone || '—'}</td>
+                    <td><span style="color:var(--gold);font-size:0.8rem;">${providerIcon}</span></td>
+                    <td>${date}</td>
+                </tr>
+            `;
+        }).join('');
+    } catch (e) {
+        console.error('Error cargando clientes:', e);
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;padding:2rem;">Error al cargar clientes. Verifica que Firestore esté habilitado en Firebase Console.</td></tr>';
+    }
 }
 
 // ===== CONTENT EDITOR =====
@@ -521,8 +562,7 @@ function showSection(section, el) {
     document.getElementById(section + 'Section').classList.remove('hidden');
     if (section === 'content') loadContentEditor();
     if (section === 'news') renderNewsTable();
-    // REGISTRO DE CLIENTES DESACTIVADO:
-    // if (section === 'clients') loadClients();
+    if (section === 'clients') loadClients();
 }
 
 function logout() {
@@ -649,6 +689,15 @@ function updateGalleryUI() {
 
 function removeGalleryImage(index, event) {
     if (event) event.stopPropagation();
+
+    // CORRECCIÓN: Si la imagen eliminada coincide con la URL del campo de texto,
+    // también limpiamos ese campo para que no se recree al guardar.
+    const removedImage = galleryImages[index];
+    const urlInput = document.getElementById('productImageUrl');
+    if (removedImage && urlInput && urlInput.value.trim() === removedImage) {
+        urlInput.value = '';
+    }
+
     galleryImages[index] = null;
     galleryImages = galleryImages.filter(img => img);
     updateGalleryUI();
