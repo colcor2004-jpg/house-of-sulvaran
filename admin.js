@@ -689,15 +689,11 @@ function updateGalleryUI() {
 
 function removeGalleryImage(index, event) {
     if (event) event.stopPropagation();
-
-    // CORRECCIÓN: Si la imagen eliminada coincide con la URL del campo de texto,
-    // también limpiamos ese campo para que no se recree al guardar.
     const removedImage = galleryImages[index];
     const urlInput = document.getElementById('productImageUrl');
     if (removedImage && urlInput && urlInput.value.trim() === removedImage) {
         urlInput.value = '';
     }
-
     galleryImages[index] = null;
     galleryImages = galleryImages.filter(img => img);
     updateGalleryUI();
