@@ -138,14 +138,14 @@ async function fbLoadContent() {
         aboutText: ""
     };
 }
-    } catch (e) {
+     catch (e) {
         console.error("Error al cargar contenido:", e);
     }
     return { 
         titulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama", 
         descripcion: "Productos de lujo seleccionados." 
     };
-}
+
 
 // Suscripción en tiempo real para contenido
 // Suscripción en tiempo real para contenido con valores seguros
