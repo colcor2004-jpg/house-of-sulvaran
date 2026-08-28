@@ -11,14 +11,13 @@ function isFirestoreReady() {
     return typeof firebase !== 'undefined' && firebase.firestore;
 }
 
-// Cargar Productos (soporta múltiples estructuras de campos)
+// Cargar Productos
 async function fbLoadProducts() {
-    if (!isFirestoreReady()) return null;
+    if (!isFirestoreReady()) return [];
     try {
         const docRef = await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_PRODUCTS).get();
         if (docRef.exists) {
             const data = docRef.data();
-            // Revisa si están en 'items', 'products' o si el documento mismo es un arreglo
             if (Array.isArray(data)) return data;
             return data.items || data.products || data.list || [];
         }
@@ -28,37 +27,27 @@ async function fbLoadProducts() {
     return [];
 }
 
-// Guardar Productos de forma robusta
+// Guardar Productos
 async function fbSaveProducts(products) {
     if (!isFirestoreReady()) return false;
     try {
-        // Aseguramos guardar tanto en 'items' como en 'products' para compatibilidad total
         await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_PRODUCTS).set({
             items: products,
             products: products,
             updatedAt: new Date().toISOString()
         }, { merge: true });
-        console.log("Productos guardados exitosamente en Firestore.");
         return true;
     } catch (e) {
-        console.error("Error al guardar productos en Firebase:", e);
+        console.error("Error al guardar productos:", e);
         return false;
     }
 }
 
-// Función híbrida para el panel de administración
 async function hybridSaveProducts(products) {
-    const savedInCloud = await fbSaveProducts(products);
-    // También guardamos una copia de respaldo en el navegador por seguridad
-    try {
-        localStorage.setItem('housesulvaran_products', JSON.stringify(products));
-    } catch (err) {
-        console.warn("No se pudo guardar en localStorage", err);
-    }
-    return savedInCloud;
+    return await fbSaveProducts(products);
 }
 
-// Suscripción o carga en tiempo real para productos
+// Suscripción de productos
 function fbSubscribeProducts(callback) {
     if (!isFirestoreReady()) return null;
     return firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_PRODUCTS)
@@ -93,7 +82,6 @@ async function fbLoadNews() {
     return null;
 }
 
-// Suscripción en tiempo real para noticias
 function fbSubscribeNews(callback) {
     if (!isFirestoreReady()) return null;
     return firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_NEWS)
@@ -109,9 +97,7 @@ function fbSubscribeNews(callback) {
         });
 }
 
-// Cargar Contenido General de la Página
-// Cargar Contenido General de la Página (Con valores por defecto para evitar errores)
-// Cargar Contenido General de la Página (Blindaje total de propiedades)
+// Cargar Contenido General
 async function fbLoadContent() {
     if (!isFirestoreReady()) return { titulo: "", subtitulo: "", descripcion: "", bannerText: "", aboutText: "" };
     try {
@@ -138,18 +124,8 @@ async function fbLoadContent() {
         aboutText: ""
     };
 }
-     catch (e) {
-        console.error("Error al cargar contenido:", e);
-    }
-    return { 
-        titulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama", 
-        descripcion: "Productos de lujo seleccionados." 
-    };
 
-
-// Suscripción en tiempo real para contenido
-// Suscripción en tiempo real para contenido con valores seguros
-// Suscripción en tiempo real para contenido con propiedades blindadas
+// Suscripción de contenido
 function fbSubscribeContent(callback) {
     if (!isFirestoreReady()) return null;
     return firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_CONTENT)
@@ -178,7 +154,6 @@ function fbSubscribeContent(callback) {
         });
 }
 
-// Inicialización general
 async function fbInitDataIfEmpty() {
     if (!isFirestoreReady()) return;
     try {
