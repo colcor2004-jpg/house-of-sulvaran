@@ -68,10 +68,24 @@ async function fbLoadNews() {
     try {
         const docRef = await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_NEWS).get();
         if (docRef.exists) {
-            return docRef.data().items || null;
+            return docRef.data().items || docRef.data() || null;
         }
     } catch (e) {
         console.error("Error al cargar noticias:", e);
+    }
+    return null;
+}
+
+// Cargar Contenido General de la Página
+async function fbLoadContent() {
+    if (!isFirestoreReady()) return null;
+    try {
+        const docRef = await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_CONTENT).get();
+        if (docRef.exists) {
+            return docRef.data();
+        }
+    } catch (e) {
+        console.error("Error al cargar contenido:", e);
     }
     return null;
 }
