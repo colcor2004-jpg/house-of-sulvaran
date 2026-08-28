@@ -110,28 +110,46 @@ function fbSubscribeNews(callback) {
 }
 
 // Cargar Contenido General de la Página
+// Cargar Contenido General de la Página (Con valores por defecto para evitar errores)
 async function fbLoadContent() {
-    if (!isFirestoreReady()) return {};
+    if (!isFirestoreReady()) return { titulo: "", descripcion: "" };
     try {
         const docRef = await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_CONTENT).get();
         if (docRef.exists && docRef.data()) {
-            return docRef.data();
+            const data = docRef.data();
+            return {
+                titulo: data.titulo || "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
+                descripcion: data.descripcion || "Productos de lujo seleccionados.",
+                ...data
+            };
         }
     } catch (e) {
         console.error("Error al cargar contenido:", e);
     }
-    return {};
+    return { 
+        titulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama", 
+        descripcion: "Productos de lujo seleccionados." 
+    };
 }
 
 // Suscripción en tiempo real para contenido
+// Suscripción en tiempo real para contenido con valores seguros
 function fbSubscribeContent(callback) {
     if (!isFirestoreReady()) return null;
     return firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_CONTENT)
         .onSnapshot((doc) => {
-            if (doc.exists) {
-                callback(doc.data() || {});
+            if (doc.exists && doc.data()) {
+                const data = doc.data();
+                callback({
+                    titulo: data.titulo || "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
+                    descripcion: data.descripcion || "Productos de lujo seleccionados.",
+                    ...data
+                });
             } else {
-                callback({});
+                callback({ 
+                    titulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama", 
+                    descripcion: "Productos de lujo seleccionados." 
+                });
             }
         }, (error) => {
             console.error("Error en tiempo real de contenido:", error);
