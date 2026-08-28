@@ -46,7 +46,7 @@ async function hybridSaveProducts(products) {
     return await fbSaveProducts(products);
 }
 
-// Suscripción o carga en tiempo real para el catálogo
+// Suscripción o carga en tiempo real para productos
 function fbSubscribeProducts(callback) {
     if (!isFirestoreReady()) return null;
     return firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_PRODUCTS)
@@ -74,6 +74,22 @@ async function fbLoadNews() {
         console.error("Error al cargar noticias:", e);
     }
     return null;
+}
+
+// Suscripción o carga en tiempo real para noticias
+function fbSubscribeNews(callback) {
+    if (!isFirestoreReady()) return null;
+    return firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_NEWS)
+        .onSnapshot((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                callback(data.items || data.news || []);
+            } else {
+                callback([]);
+            }
+        }, (error) => {
+            console.error("Error en tiempo real de noticias:", error);
+        });
 }
 
 // Cargar Contenido General de la Página
