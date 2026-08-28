@@ -29,14 +29,29 @@ function isFirestoreReady() {
 async function fbSaveProducts(products) {
     if (!isFirestoreReady()) return false;
     try {
-        await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_PRODUCTS).set({
-            data: products,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        const batch = firebaseDb.batch();
+        const parentRef = firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_PRODUCTS);
+
+        products.forEach(product => {
+            const prodId = product.id ? String(product.id) : parentRef.collection('products').doc().id;
+            const docRef = parentRef.collection('products').doc(prodId);
+            
+            batch.set(docRef, {
+                id: prodId,
+                name: product.name || '',
+                price: product.price || 0,
+                category: product.category || '',
+                image: product.image || '',
+                description: product.description || '',
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
         });
-        console.log('✅ Productos guardados en Firestore');
+
+        await batch.commit();
+        console.log('Productos guardados en subcolección de Firestore');
         return true;
     } catch (e) {
-        console.error('❌ Error guardando productos en Firestore:', e);
+        console.error('Error guardando productos en Firestore:', e);
         return false;
     }
 }
