@@ -16,7 +16,7 @@ window.SITE_DATA = {
         { id: 6, name: 
         { id: 7, name: 
         { id: 8, name:
-    ],
+    
     news: [
         { id: 1, title: "¡Nueva colección de relojes suizos disponible!", category: "Novedad", content: "Acabamos de recibir la nueva temporada de relojes suizos. Modelos exclusivos con precios especiales por tiempo limitado. Contáctanos por WhatsApp para más información.", date: "2026-08-15" },
         { id: 2, title: "Promoción: 15% de descuento en perfumes", category: "Promoción", content: "Por esta semana, todos nuestros perfumes de alta gama tienen un 15% de descuento. Aprovecha y lleva tu fragancia favorita a un precio increíble. Válido hasta agotar existencias.", date: "2026-08-10" },
