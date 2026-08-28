@@ -2,7 +2,16 @@
 // HOUSE OF SULVARAN - Admin Panel (v2 con Firebase Sync)
 // ============================================
 
-const defaultProducts = []; // Productos de demostración eliminados: el catálogo vive en Firestore.
+const defaultProducts = [
+    { id: 1, name: "Patek Philippe Nautilus", category: "Reloj", price: 85000, status: "disponible", description: "Icono de la relojería suiza. Caja de acero inoxidable, esfera azul cobalto y movimiento automático de manufactura.", image: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=600&q=80", images: ["https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=600&q=80"] },
+    { id: 2, name: "Creed Aventus", category: "Perfume", price: 445, status: "disponible", description: "Fragancia legendaria que encapsula fuerza, poder y éxito. Notas de piña, abedul y almizcle.", image: "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=600&q=80", images: ["https://images.unsplash.com/photo-1594035910387-fea47794261f?w=600&q=80"] },
+    { id: 3, name: "Rolex Daytona", category: "Reloj", price: 42000, status: "disponible", description: "Cronógrafo legendario con bisel de cerámica negra. El compañero indispensable del gentleman driver.", image: "https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?w=600&q=80", images: ["https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?w=600&q=80"] },
+    { id: 4, name: "Tom Ford Tobacco Vanille", category: "Perfume", price: 395, status: "disponible", description: "Una interpretación opulenta del tabaco y la vainilla. Cálido, especiado y profundamente seductor.", image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=600&q=80", images: ["https://images.unsplash.com/photo-1541643600914-78b084683601?w=600&q=80"] },
+    { id: 5, name: "Audemars Piguet Royal Oak", category: "Reloj", price: 78000, status: "disponible", description: "Diseño octogonal revolucionario con bisel hexagonal. Acero inoxidable y esfera 'Grande Tapisserie'.", image: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=600&q=80", images: ["https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=600&q=80"] },
+    { id: 6, name: "Clive Christian No. 1", category: "Perfume", price: 865, status: "disponible", description: "Considerado el perfume más caro del mundo. Bergamota, cardamomo y sándalo en su máxima expresión.", image: "https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?w=600&q=80", images: ["https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?w=600&q=80"] },
+    { id: 7, name: "Camisa Gucci Slim Fit", category: "Ropa", price: 320, status: "disponible", description: "Camisa de vestir de algodón egipcio con corte slim fit. Elegancia italiana para cualquier ocasión.", image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&q=80", images: ["https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&q=80"] },
+    { id: 8, name: "Zapatos Oxford Berluti", category: "Zapato", price: 1850, status: "disponible", description: "Zapatos Oxford de piel patinada a mano. El arte del calzado de lujo en su máxima expresión.", image: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&q=80", images: ["https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&q=80"] }
+];
 
 const defaultNews = [
     { id: 1, title: "¡Nueva colección de relojes suizos disponible!", category: "Novedad", content: "Acabamos de recibir la nueva temporada de relojes suizos. Modelos exclusivos con precios especiales por tiempo limitado. Contáctanos por WhatsApp para más información.", date: "2026-08-15" },
@@ -19,7 +28,7 @@ const defaultContent = {
     aboutTitle: "HOUSE OF SULVARAN",
     aboutText1: "Somos tu destino de confianza para relojes y perfumes de alta gama en Venezuela. Seleccionamos cada pieza con criterio exigente para ofrecerte solo lo mejor del mercado.",
     aboutText2: "Envíos a toda Venezuela. Atención personalizada por WhatsApp. Productos 100% originales con garantía de satisfacción.",
-    aboutImage: "logo.jpg",
+    aboutImage: "https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=800&q=80",
     contactLocation: "Venezuela - Envíos a todo el país",
     contactHours: "Lunes a Domingo - 24 horas",
     tiktokUrl: "https://tiktok.com",
@@ -41,35 +50,36 @@ function checkAdmin() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// ESTADO: la NUBE (Firestore) es la única fuente de verdad.
-// localStorage solo se usa como respaldo cuando no hay Firestore.
-// Esto evita que al abrir el admin en un dispositivo nuevo se
-// "reinicie" el catálogo con datos viejos o de demostración.
+// GETTERS: Firestore primero, luego SITE_DATA, luego localStorage
 // ═══════════════════════════════════════════════════════════
-let stateProducts = [];
-let stateNews = [];
-let stateContent = { ...defaultContent };
-let cloudReady = false;
-
 function getProducts() {
-    if (cloudReady) return stateProducts;
     const local = localStorage.getItem('housesulvaranProducts');
-    if (local) { try { return JSON.parse(local); } catch (e) {} }
-    if (typeof window.SITE_DATA !== 'undefined' && window.SITE_DATA.products) return window.SITE_DATA.products;
+    if (local) {
+        try { return JSON.parse(local); } catch(e) {}
+    }
+    if (typeof window.SITE_DATA !== 'undefined' && window.SITE_DATA.products) {
+        return window.SITE_DATA.products;
+    }
     return defaultProducts;
 }
 function getNews() {
-    if (cloudReady) return stateNews;
     const local = localStorage.getItem('housesulvaranNews');
-    if (local) { try { return JSON.parse(local); } catch (e) {} }
-    if (typeof window.SITE_DATA !== 'undefined' && window.SITE_DATA.news) return window.SITE_DATA.news;
+    if (local) {
+        try { return JSON.parse(local); } catch(e) {}
+    }
+    if (typeof window.SITE_DATA !== 'undefined' && window.SITE_DATA.news) {
+        return window.SITE_DATA.news;
+    }
     return defaultNews;
 }
 function getContent() {
-    if (cloudReady) return stateContent;
     const local = localStorage.getItem('housesulvaranContent');
-    if (local) { try { return JSON.parse(local); } catch (e) {} }
-    if (typeof window.SITE_DATA !== 'undefined' && window.SITE_DATA.content) return window.SITE_DATA.content;
+    if (local) {
+        try { return JSON.parse(local); } catch(e) {}
+    }
+    if (typeof window.SITE_DATA !== 'undefined' && window.SITE_DATA.content) {
+        return window.SITE_DATA.content;
+    }
     return defaultContent;
 }
 
@@ -90,7 +100,7 @@ function safeSaveToStorage(key, data) {
                 '⚠️ Almacenamiento lleno (' + sizeMB + ' MB usados)\n\n' +
                 'En smartphones el navegador permite muy poco espacio.\n\n' +
                 'SOLUCIONES:\n' +
-                '1. Sube fotos desde la galería (se comprimen a JPG automáticamente).\n' +
+                '1. Usa URLs de imágenes (pega un link de imgur/unsplash) en vez de subir archivos.\n' +
                 '2. Borra productos con muchas imágenes grandes.\n' +
                 '3. Administra los productos desde una PC/Mac donde el límite es mayor.\n\n' +
                 'El producto NO se guardó. Intenta de nuevo con menos imágenes.'
@@ -131,39 +141,25 @@ function getStatusDot(status) {
 }
 
 // ===== FIREBASE INIT =====
-async function initFirebaseAdmin() {
-    const statusDiv = document.getElementById('firebaseStatus');
-
+function initFirebaseAdmin() {
     if (typeof initFirebase === 'function' && initFirebase()) {
         firebaseEnabled = true;
         const clientsNav = document.getElementById('clientsNavItem');
         if (clientsNav) clientsNav.style.display = 'block';
-        if (statusDiv) statusDiv.innerHTML = '<span class="firebase-badge">🔥 Firestore activo — Cambios en tiempo real</span>';
 
-        // Cargar SIEMPRE desde la nube antes de mostrar nada.
-        const [p, n, c] = await Promise.all([fbLoadProducts(), fbLoadNews(), fbLoadContent()]);
-        stateProducts = p || [];
-        stateNews = n || (typeof window.SITE_DATA !== 'undefined' && window.SITE_DATA.news) || [];
-        stateContent = c || (typeof window.SITE_DATA !== 'undefined' && window.SITE_DATA.content) || { ...defaultContent };
-        cloudReady = true;
+        // Mostrar badge de estado de Firestore
+        const statusDiv = document.getElementById('firebaseStatus');
+        if (statusDiv) {
+            statusDiv.innerHTML = '<span class="firebase-badge">🔥 Firestore activo — Cambios en tiempo real</span>';
+        }
 
-        // Tiempo real: si otro dispositivo edita, este panel se actualiza solo.
-        fbSubscribeProducts(items => {
-            stateProducts = items;
-            renderProductsTable();
-        });
-        fbSubscribeNews(items => {
-            stateNews = items;
-            if (!document.getElementById('newsSection').classList.contains('hidden')) renderNewsTable();
-        });
-        fbSubscribeContent(content => {
-            stateContent = content;
-            if (!document.getElementById('contentSection').classList.contains('hidden')) loadContentEditor();
-        });
+        // Inicializar datos en Firestore si está vacío
+        fbInitDataIfEmpty();
     } else {
-        firebaseEnabled = false;
-        cloudReady = false;
-        if (statusDiv) statusDiv.innerHTML = '<span class="firebase-badge off">🔒 Modo Local — Exporta data.js para compartir cambios</span>';
+        const statusDiv = document.getElementById('firebaseStatus');
+        if (statusDiv) {
+            statusDiv.innerHTML = '<span class="firebase-badge off">🔒 Modo Local — Exporta data.js para compartir cambios</span>';
+        }
     }
 }
 
@@ -239,13 +235,13 @@ function renderProductsTable() {
     }
     tbody.innerHTML = products.map(p => {
         const imgCount = p.images ? p.images.length : (p.image ? 1 : 0);
-        const mainImg = p.images && p.images[0] ? p.images[0] : (p.image || 'logo.jpg');
+        const mainImg = p.images && p.images[0] ? p.images[0] : (p.image || 'https://images.unsplash.com/photo-1612817159949-195b6eb9e31a?w=100&q=80');
         const statusDot = getStatusDot(p.status);
         return `
         <tr>
             <td>
                 <div class="table-gallery-preview">
-                    <img src="${mainImg}" class="table-product-img" alt="${p.name}" onerror="this.src='logo.jpg'">
+                    <img src="${mainImg}" class="table-product-img" alt="${p.name}" onerror="this.src='https://images.unsplash.com/photo-1612817159949-195b6eb9e31a?w=100&q=80'">
                     ${imgCount > 1 ? `<span class="table-gallery-badge">${imgCount}</span>` : ''}
                 </div>
             </td>
@@ -315,24 +311,26 @@ async function saveProduct(e) {
     images = images.slice(0, 3);
     let image = images[0] || '';
 
-    // GUARDADO POR DOCUMENTO INDIVIDUAL (evita el límite de 1 MB)
-    const product = id
-        ? { ...(getProducts().find(p => p.id == id) || {}), id: Number(id), name, category, price, status, description, image, images }
-        : { id: generateId(), name, category, price, status, description, image, images };
-
-    if (cloudReady) {
-        const ok = await fbSaveProduct(product);
-        if (!ok) return;
-        const idx = stateProducts.findIndex(p => p.id == product.id);
-        if (idx === -1) stateProducts = [product, ...stateProducts];
-        else stateProducts[idx] = product;
-        alert('✅ Producto guardado en la NUBE. Todos los dispositivos lo verán automáticamente.');
+    let products = getProducts();
+    if (id) {
+        const idx = products.findIndex(p => p.id == id);
+        if (idx !== -1) products[idx] = { ...products[idx], name, category, price, status, description, image, images };
     } else {
-        const list = getProducts().slice();
-        const idx = list.findIndex(p => p.id == product.id);
-        if (idx === -1) list.push(product); else list[idx] = product;
-        if (!saveProducts(list)) return;
-        alert('✅ Producto guardado localmente.\n\n⚠️ Sin conexión a la nube. Exporta data.js para compartir los cambios.');
+        products.push({ id: generateId(), name, category, price, status, description, image, images });
+    }
+
+    // GUARDADO HÍBRIDO: Firestore + localStorage
+    const savedToCloud = await hybridSaveProducts(products);
+
+    if (savedToCloud) {
+        alert('✅ Producto guardado en la NUBE. Todos los usuarios lo verán automáticamente.');
+    } else {
+        // Fallback a localStorage
+        if (saveProducts(products)) {
+            alert('✅ Producto guardado localmente.\n\n⚠️ Para que otros dispositivos lo vean, exporta data.js y súbelo al hosting.');
+        } else {
+            return; // Error guardando
+        }
     }
 
     renderProductsTable();
@@ -343,13 +341,19 @@ function editProduct(id) { openProductModal(id); }
 
 async function deleteProduct(id) {
     if (!confirm('¿Eliminar este producto?')) return;
-    if (cloudReady) {
-        const ok = await fbDeleteProduct(id);
-        if (!ok) { alert('❌ No se pudo eliminar en la nube. Intenta de nuevo.'); return; }
-        stateProducts = stateProducts.filter(p => p.id != id);
-    } else {
-        saveProducts(getProducts().filter(p => p.id != id));
+    const filtered = getProducts().filter(p => p.id !== id);
+
+    const savedToCloud = await hybridSaveProducts(filtered);
+    if (!savedToCloud) {
+        saveProducts(filtered);
     }
+    renderProductsTable();
+}
+
+function resetProducts() {
+    if (!confirm('¿Restaurar productos de demostración? Se perderán los cambios actuales.')) return;
+    hybridSaveProducts(defaultProducts);
+    safeSaveToStorage('housesulvaranProducts', defaultProducts);
     renderProductsTable();
 }
 
@@ -419,8 +423,8 @@ async function saveNewsItem(e) {
         news.push({ id: generateId(), title, category, content, date });
     }
 
-    const savedToCloud = cloudReady && await hybridSaveNews(news);
-    if (savedToCloud) stateNews = news; else saveNews(news);
+    const savedToCloud = await hybridSaveNews(news);
+    if (!savedToCloud) saveNews(news);
 
     renderNewsTable();
     closeNewsModal();
@@ -431,8 +435,8 @@ function editNews(id) { openNewsModal(id); }
 async function deleteNews(id) {
     if (!confirm('¿Eliminar esta publicación?')) return;
     const filtered = getNews().filter(n => n.id !== id);
-    const savedToCloud = cloudReady && await hybridSaveNews(filtered);
-    if (savedToCloud) stateNews = filtered; else saveNews(filtered);
+    const savedToCloud = await hybridSaveNews(filtered);
+    if (!savedToCloud) saveNews(filtered);
     renderNewsTable();
 }
 
@@ -537,9 +541,8 @@ async function saveContent() {
         stat3Label: document.getElementById('stat3LabelInput').value
     };
 
-    const savedToCloud = cloudReady && await hybridSaveContent(c);
+    const savedToCloud = await hybridSaveContent(c);
     if (savedToCloud) {
-        stateContent = c;
         alert('✅ Contenido guardado en la NUBE. Todos los usuarios lo verán automáticamente.');
     } else {
         if (saveContentObj(c)) {
@@ -794,9 +797,9 @@ window.SITE_DATA = {
     alert('✅ data.js descargado.\n\nSube este archivo a tu hosting (Netlify/Vercel/GitHub Pages) reemplazando el data.js anterior.\n\nAsí TODOS los usuarios verán los cambios que hiciste.');
 }
 
-async function init() {
+function init() {
     if (!checkAdmin()) return;
-    await initFirebaseAdmin();
+    initFirebaseAdmin();
     renderProductsTable();
     initImagePreviews();
     initModals();
