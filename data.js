@@ -1,6 +1,6 @@
-// ============================================
+// ==========================================
 // HOUSE OF SULVARAN - Datos del sitio (GLOBALES)
-// ============================================
+// ==========================================
 // Este archivo contiene los datos que ven TODOS los usuarios.
 // Para actualizarlo: ve al panel de admin → "Exportar data.js",
 // descarga el archivo y súbelo a tu hosting reemplazando este.
