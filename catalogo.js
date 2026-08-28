@@ -34,21 +34,8 @@ async function initCatalogo() {
     // Inicializar Firebase
     if (typeof initFirebase === 'function') initFirebase();
 
-    // Cargar productos
     const fbProducts = await fbLoadProducts();
-    if (fbProducts) {
-        allProducts = fbProducts;
-    } else if (typeof window.SITE_DATA !== 'undefined' && window.SITE_DATA.products) {
-        allProducts = window.SITE_DATA.products;
-    } else {
-        const local = localStorage.getItem('housesulvaranProducts');
-        if (local) {
-            try { allProducts = JSON.parse(local); } catch(e) {}
-        } else {
-            allProducts = defaultProducts;
-        }
-    }
-
+    allProducts = (fbProducts && Array.isArray(fbProducts)) ? fbProducts : [];
     // Suscribirse a cambios en tiempo real
     if (isFirestoreReady()) {
         fbSubscribeProducts(products => {
