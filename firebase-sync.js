@@ -111,10 +111,10 @@ function fbSubscribeNews(callback) {
 
 // Cargar Contenido General de la Página
 async function fbLoadContent() {
-    if (!isFirestoreReady()) return null;
+    if (!isFirestoreReady()) return {};
     try {
         const docRef = await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_CONTENT).get();
-        if (docRef.exists) {
+        if (docRef.exists && docRef.data()) {
             return docRef.data();
         }
     } catch (e) {
