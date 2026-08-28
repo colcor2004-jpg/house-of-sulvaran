@@ -53,8 +53,14 @@ function checkAdmin() {
 // GETTERS: Firestore primero, luego SITE_DATA, luego localStorage
 // ═══════════════════════════════════════════════════════════
 function getProducts() {
-    // Retorna vacío si no hay conexión o datos directos
-    return [];
+    const local = localStorage.getItem('housesulvaranProducts');
+    if (local) {
+        try { return JSON.parse(local); } catch(e) {}
+    }
+    if (typeof window.SITE_DATA !== 'undefined' && window.SITE_DATA.products) {
+        return window.SITE_DATA.products;
+    }
+    return defaultProducts;
 }
 function getNews() {
     const local = localStorage.getItem('housesulvaranNews');
