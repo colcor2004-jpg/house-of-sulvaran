@@ -234,6 +234,7 @@ function loadContent() {
     const setHref = (id, val) => { const el = document.getElementById(id); if (el) el.href = val; };
 
     setText('heroSubtitle', c.heroSubtitle);
+   setHtml('heroTitle', (c.heroTitle || "").replace(/(Alta Gama|alta gama)/g, '<span class="highlight">$1</span>'));
     setHtml('heroTitle', c.heroTitle.replace(/(Alta Gama|alta gama)/g, '<span class="gold-text">$1</span>'));
     setText('heroDesc', c.heroDesc);
     setText('productsTitle', c.productsTitle);
