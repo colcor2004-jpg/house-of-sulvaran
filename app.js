@@ -235,13 +235,11 @@ function loadContent() {
 
     setText('heroSubtitle', c.heroSubtitle);
    setHtml('heroTitle', (c.heroTitle || "").replace(/(Alta Gama|alta gama)/g, '<span class="highlight">$1</span>'));
-    setHtml('heroTitle', c.heroTitle.replace(/(Alta Gama|alta gama)/g, '<span class="gold-text">$1</span>'));
     setText('heroDesc', c.heroDesc);
     setText('productsTitle', c.productsTitle);
     setText('newsTitle', c.newsTitle);
    setHtml('aboutTitle', (c.aboutTitle || "").replace(/(HOUSE OF SULVARAN|JS Perfumeria)/g, '<span class="highlight">$1</span>'));
     setHtml('aboutTitle', c.aboutTitle.replace(/(HOUSE OF SULVARAN|JS Prendas)/g, '<span class="gold-text">$1</span>'));
-    setText('aboutText1', c.aboutText1);
     setText('aboutText2', c.aboutText2);
     setSrc('aboutImage', c.aboutImage);
     setText('contactLocation', c.contactLocation);
