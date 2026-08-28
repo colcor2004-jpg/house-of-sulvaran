@@ -220,4 +220,7 @@ async function fbInitDataIfEmpty() {
                 if (local) content = JSON.parse(local);
             }
             if (content) await fbSaveContent(content);
-      
+      }
+} catch (e) {
+    console.error('Error inicializando Firestore:', e);
+}
