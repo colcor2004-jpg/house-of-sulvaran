@@ -1,268 +1,227 @@
 // ============================================
-// HOUSE OF SULVARAN - Capa de sincronización Firestore (v3)
+// HOUSE OF SULVARAN - Firebase Firestore Sync
 // ============================================
-// CAMBIO IMPORTANTE (v3):
-//   Antes: TODOS los productos vivían dentro de UN solo documento
-//          (siteData/products => { items: [ ...cientos de productos... ] })
-//          => al superar 1 MB Firestore rechaza la escritura.
-//   Ahora: cada producto es su propio documento dentro de la COLECCIÓN
-//          "products" (products/{id}). Ya no hay límite práctico de catálogo
-//          y solo se escribe el producto editado, no todo el catálogo.
-//
-// Estructura en Firestore:
-//   products/{id}        -> { id, name, category, price, status, description, image, images[], updatedAt }
-//   siteData/news        -> { items: [...] }      (contenido pequeño)
-//   siteData/content     -> { ...campos... }      (contenido pequeño)
+// Sincroniza productos, noticias y contenido con Firestore.
+// Si Firebase está configurado, los datos van a la NUBE
+// y TODOS los dispositivos ven los cambios INSTANTÁNEAMENTE.
+// Si NO está configurado, funciona en modo local (localStorage).
 // ============================================
 
-const PRODUCTS_COLLECTION = 'products';
-const SITE_COLLECTION = 'siteData';
-const LEGACY_PRODUCTS_DOC = 'products'; // siteData/products (formato viejo)
+const FB_COLLECTION = 'siteData';
+const FB_DOC_PRODUCTS = 'products';
+const FB_DOC_NEWS = 'news';
+const FB_DOC_CONTENT = 'content';
 
-// Límite real de Firestore por documento: 1 MiB. Dejamos margen.
-const MAX_DOC_BYTES = 900 * 1024;
+let fbProductsUnsub = null;
+let fbNewsUnsub = null;
+let fbContentUnsub = null;
 
+// ═══════════════════════════════════════════════════════════
+// DETECTAR si Firebase Firestore está disponible
+// ═══════════════════════════════════════════════════════════
 function isFirestoreReady() {
     return typeof firebaseDb !== 'undefined' && firebaseDb !== null;
 }
 
-function ensureFirestore() {
-    if (isFirestoreReady()) return true;
-    if (typeof initFirebase === 'function') return initFirebase() && isFirestoreReady();
-    return false;
-}
-
-function approxBytes(obj) {
-    try { return new Blob([JSON.stringify(obj)]).size; } catch (e) { return JSON.stringify(obj).length; }
-}
-
-// ───────────────────────────────────────────
-// Normalización de productos
-// ───────────────────────────────────────────
-// Se descartan las imágenes de demostración por URL (Unsplash y similares).
-// Solo se conservan imágenes subidas desde la galería (data:image/... en JPG)
-// o URLs propias que el administrador haya escrito a mano.
-function isDemoImage(url) {
-    if (!url || typeof url !== 'string') return true;
-    return /images\.unsplash\.com|source\.unsplash\.com|placeholder\.com|via\.placeholder/i.test(url);
-}
-
-function normalizeProduct(raw) {
-    if (!raw) return null;
-    const images = (raw.images || (raw.image ? [raw.image] : []))
-        .filter(img => typeof img === 'string' && img.trim() && !isDemoImage(img))
-        .slice(0, 3);
-    return {
-        id: Number(raw.id) || Date.now(),
-        name: raw.name || '',
-        category: raw.category || 'Reloj',
-        price: Number(raw.price) || 0,
-        status: raw.status || 'disponible',
-        description: raw.description || '',
-        image: images[0] || '',
-        images: images
-    };
-}
-
-function sortProducts(list) {
-    return list.slice().sort((a, b) => (b.id || 0) - (a.id || 0));
-}
-
-// ───────────────────────────────────────────
-// PRODUCTOS (subcolección: 1 documento por producto)
-// ───────────────────────────────────────────
-async function fbLoadProducts() {
-    if (!ensureFirestore()) return null;
+// ═══════════════════════════════════════════════════════════
+// GUARDAR en Firestore (usado por admin.js)
+// ═══════════════════════════════════════════════════════════
+async function fbSaveProducts(products) {
+    if (!isFirestoreReady()) return false;
     try {
-        await fbMigrateLegacyProducts();
-        const snap = await firebaseDb.collection(PRODUCTS_COLLECTION).get();
-        const items = [];
-        snap.forEach(doc => {
-            const p = normalizeProduct(doc.data());
-            if (p) items.push(p);
+        await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_PRODUCTS).set({
+            data: products,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        return sortProducts(items);
+        console.log('✅ Productos guardados en Firestore');
+        return true;
     } catch (e) {
-        console.error('Firestore: error cargando productos', e);
-        return null;
+        console.error('❌ Error guardando productos en Firestore:', e);
+        return false;
     }
 }
 
-function fbSubscribeProducts(callback) {
-    if (!ensureFirestore()) return () => {};
-    return firebaseDb.collection(PRODUCTS_COLLECTION).onSnapshot(snap => {
-        const items = [];
-        snap.forEach(doc => {
-            const p = normalizeProduct(doc.data());
-            if (p) items.push(p);
+async function fbSaveNews(news) {
+    if (!isFirestoreReady()) return false;
+    try {
+        await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_NEWS).set({
+            data: news,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        callback(sortProducts(items));
-    }, err => console.error('Firestore: error en la suscripción de productos', err));
-}
-
-// Guarda UN producto (documento individual). Devuelve true si se guardó.
-async function fbSaveProduct(product) {
-    if (!ensureFirestore()) return false;
-    const clean = normalizeProduct(product);
-    if (!clean) return false;
-
-    const size = approxBytes(clean);
-    if (size > MAX_DOC_BYTES) {
-        alert(
-            '⚠️ Este producto pesa ' + (size / 1024 / 1024).toFixed(2) + ' MB y supera el límite de 1 MB por producto.\n\n' +
-            'Usa menos fotos o fotos más livianas (la galería las comprime automáticamente).'
-        );
-        return false;
-    }
-
-    try {
-        await firebaseDb
-            .collection(PRODUCTS_COLLECTION)
-            .doc(String(clean.id))
-            .set({ ...clean, updatedAt: new Date().toISOString() });
         return true;
     } catch (e) {
-        console.error('Firestore: error guardando producto', e);
-        alert('❌ No se pudo guardar en la nube: ' + (e.message || e));
+        console.error('Error guardando noticias en Firestore:', e);
         return false;
     }
-}
-
-async function fbDeleteProduct(id) {
-    if (!ensureFirestore()) return false;
-    try {
-        await firebaseDb.collection(PRODUCTS_COLLECTION).doc(String(id)).delete();
-        return true;
-    } catch (e) {
-        console.error('Firestore: error eliminando producto', e);
-        return false;
-    }
-}
-
-// Guarda una lista completa (se usa solo en migraciones/importaciones).
-async function fbSaveProducts(list) {
-    if (!ensureFirestore()) return false;
-    try {
-        const items = (list || []).map(normalizeProduct).filter(Boolean);
-        // Firestore permite 500 operaciones por batch.
-        for (let i = 0; i < items.length; i += 400) {
-            const batch = firebaseDb.batch();
-            items.slice(i, i + 400).forEach(p => {
-                const ref = firebaseDb.collection(PRODUCTS_COLLECTION).doc(String(p.id));
-                batch.set(ref, { ...p, updatedAt: new Date().toISOString() });
-            });
-            await batch.commit();
-        }
-        return true;
-    } catch (e) {
-        console.error('Firestore: error guardando lista de productos', e);
-        return false;
-    }
-}
-
-// Compatibilidad con el código anterior del panel.
-async function hybridSaveProducts(list) { return fbSaveProducts(list); }
-
-// Migra el documento viejo siteData/products (array gigante) a la colección.
-let legacyMigrationDone = false;
-async function fbMigrateLegacyProducts() {
-    if (legacyMigrationDone || !isFirestoreReady()) return;
-    legacyMigrationDone = true;
-    try {
-        const ref = firebaseDb.collection(SITE_COLLECTION).doc(LEGACY_PRODUCTS_DOC);
-        const doc = await ref.get();
-        if (!doc.exists) return;
-        const data = doc.data() || {};
-        const legacy = data.items || data.products || [];
-        if (Array.isArray(legacy) && legacy.length) {
-            console.log('Migrando ' + legacy.length + ' productos del formato antiguo a la colección "products"...');
-            await fbSaveProducts(legacy);
-        }
-        await ref.delete();
-        console.log('✅ Migración completada: siteData/products eliminado.');
-    } catch (e) {
-        console.warn('No se pudo migrar el documento antiguo de productos:', e.message || e);
-    }
-}
-
-// ───────────────────────────────────────────
-// NOTICIAS (documento único, contenido liviano)
-// ───────────────────────────────────────────
-async function fbLoadNews() {
-    if (!ensureFirestore()) return null;
-    try {
-        const doc = await firebaseDb.collection(SITE_COLLECTION).doc('news').get();
-        if (!doc.exists) return null;
-        const items = (doc.data() || {}).items;
-        return Array.isArray(items) ? items : null;
-    } catch (e) {
-        console.error('Firestore: error cargando noticias', e);
-        return null;
-    }
-}
-
-function fbSubscribeNews(callback) {
-    if (!ensureFirestore()) return () => {};
-    return firebaseDb.collection(SITE_COLLECTION).doc('news').onSnapshot(doc => {
-        if (!doc.exists) return;
-        const items = (doc.data() || {}).items;
-        if (Array.isArray(items)) callback(items);
-    }, err => console.error('Firestore: error en la suscripción de noticias', err));
-}
-
-async function fbSaveNews(items) {
-    if (!ensureFirestore()) return false;
-    try {
-        await firebaseDb.collection(SITE_COLLECTION).doc('news')
-            .set({ items: items || [], updatedAt: new Date().toISOString() });
-        return true;
-    } catch (e) {
-        console.error('Firestore: error guardando noticias', e);
-        return false;
-    }
-}
-async function hybridSaveNews(items) { return fbSaveNews(items); }
-
-// ───────────────────────────────────────────
-// CONTENIDO DEL SITIO (documento único)
-// ───────────────────────────────────────────
-async function fbLoadContent() {
-    if (!ensureFirestore()) return null;
-    try {
-        const doc = await firebaseDb.collection(SITE_COLLECTION).doc('content').get();
-        if (!doc.exists) return null;
-        const data = doc.data() || {};
-        delete data.updatedAt;
-        return Object.keys(data).length ? data : null;
-    } catch (e) {
-        console.error('Firestore: error cargando contenido', e);
-        return null;
-    }
-}
-
-function fbSubscribeContent(callback) {
-    if (!ensureFirestore()) return () => {};
-    return firebaseDb.collection(SITE_COLLECTION).doc('content').onSnapshot(doc => {
-        if (!doc.exists) return;
-        const data = doc.data() || {};
-        delete data.updatedAt;
-        if (Object.keys(data).length) callback(data);
-    }, err => console.error('Firestore: error en la suscripción de contenido', err));
 }
 
 async function fbSaveContent(content) {
-    if (!ensureFirestore()) return false;
+    if (!isFirestoreReady()) return false;
     try {
-        await firebaseDb.collection(SITE_COLLECTION).doc('content')
-            .set({ ...content, updatedAt: new Date().toISOString() });
+        await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_CONTENT).set({
+            data: content,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
         return true;
     } catch (e) {
-        console.error('Firestore: error guardando contenido', e);
+        console.error('Error guardando contenido en Firestore:', e);
         return false;
     }
 }
-async function hybridSaveContent(content) { return fbSaveContent(content); }
 
-// Ya NO se siembran productos de demostración en Firestore.
-// (Eso era lo que "reiniciaba" el catálogo al abrir el admin en otro dispositivo.)
-async function fbInitDataIfEmpty() { return true; }
+// ═══════════════════════════════════════════════════════════
+// CARGAR desde Firestore (una sola vez)
+// ═══════════════════════════════════════════════════════════
+async function fbLoadProducts() {
+    if (!isFirestoreReady()) return null;
+    try {
+        const doc = await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_PRODUCTS).get();
+        if (doc.exists) {
+            return doc.data().data;
+        }
+        return null;
+    } catch (e) {
+        console.error('Error cargando productos de Firestore:', e);
+        return null;
+    }
+}
+
+async function fbLoadNews() {
+    if (!isFirestoreReady()) return null;
+    try {
+        const doc = await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_NEWS).get();
+        if (doc.exists) return doc.data().data;
+        return null;
+    } catch (e) {
+        return null;
+    }
+}
+
+async function fbLoadContent() {
+    if (!isFirestoreReady()) return null;
+    try {
+        const doc = await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_CONTENT).get();
+        if (doc.exists) return doc.data().data;
+        return null;
+    } catch (e) {
+        return null;
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// ESCUCHAR cambios en TIEMPO REAL
+// ═══════════════════════════════════════════════════════════
+function fbSubscribeProducts(callback) {
+    if (!isFirestoreReady()) return null;
+    fbProductsUnsub = firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_PRODUCTS)
+        .onSnapshot(doc => {
+            if (doc.exists && doc.data().data) {
+                console.log('🔄 Productos actualizados desde Firestore');
+                callback(doc.data().data);
+            }
+        }, err => {
+            console.error('Error en subscription de productos:', err);
+        });
+    return fbProductsUnsub;
+}
+
+function fbSubscribeNews(callback) {
+    if (!isFirestoreReady()) return null;
+    fbNewsUnsub = firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_NEWS)
+        .onSnapshot(doc => {
+            if (doc.exists && doc.data().data) {
+                callback(doc.data().data);
+            }
+        });
+    return fbNewsUnsub;
+}
+
+function fbSubscribeContent(callback) {
+    if (!isFirestoreReady()) return null;
+    fbContentUnsub = firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_CONTENT)
+        .onSnapshot(doc => {
+            if (doc.exists && doc.data().data) {
+                callback(doc.data().data);
+            }
+        });
+    return fbContentUnsub;
+}
+
+// ═══════════════════════════════════════════════════════════
+// GUARDADO HÍBRIDO (Firestore + localStorage backup)
+// ═══════════════════════════════════════════════════════════
+async function hybridSaveProducts(products) {
+    const savedToCloud = await fbSaveProducts(products);
+    safeSaveToStorage('housesulvaranProducts', products);
+    return savedToCloud;
+}
+
+async function hybridSaveNews(news) {
+    const savedToCloud = await fbSaveNews(news);
+    safeSaveToStorage('housesulvaranNews', news);
+    return savedToCloud;
+}
+
+async function hybridSaveContent(content) {
+    const savedToCloud = await fbSaveContent(content);
+    safeSaveToStorage('housesulvaranContent', content);
+    return savedToCloud;
+}
+
+// Helper
+function safeSaveToStorage(key, data) {
+    try {
+        localStorage.setItem(key, JSON.stringify(data));
+        return true;
+    } catch (e) {
+        console.error('Error guardando en localStorage:', e);
+        return false;
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// INICIALIZAR datos en Firestore (migración)
+// ═══════════════════════════════════════════════════════════
+async function fbInitDataIfEmpty() {
+    if (!isFirestoreReady()) return;
+    try {
+        const prodDoc = await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_PRODUCTS).get();
+        if (!prodDoc.exists) {
+            let products = null;
+            if (typeof window.SITE_DATA !== 'undefined' && window.SITE_DATA.products) {
+                products = window.SITE_DATA.products;
+            } else {
+                const local = localStorage.getItem('housesulvaranProducts');
+                if (local) products = JSON.parse(local);
+            }
+            if (products) {
+                await fbSaveProducts(products);
+                console.log('📤 Productos migrados a Firestore');
+            }
+        }
+        const newsDoc = await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_NEWS).get();
+        if (!newsDoc.exists) {
+            let news = null;
+            if (typeof window.SITE_DATA !== 'undefined' && window.SITE_DATA.news) {
+                news = window.SITE_DATA.news;
+            } else {
+                const local = localStorage.getItem('housesulvaranNews');
+                if (local) news = JSON.parse(local);
+            }
+            if (news) await fbSaveNews(news);
+        }
+        const contentDoc = await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_CONTENT).get();
+        if (!contentDoc.exists) {
+            let content = null;
+            if (typeof window.SITE_DATA !== 'undefined' && window.SITE_DATA.content) {
+                content = window.SITE_DATA.content;
+            } else {
+                const local = localStorage.getItem('housesulvaranContent');
+                if (local) content = JSON.parse(local);
+            }
+            if (content) await fbSaveContent(content);
+        }
+    } catch (e) {
+        console.error('Error inicializando Firestore:', e);
+    }
+}
