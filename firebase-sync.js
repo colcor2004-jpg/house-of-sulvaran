@@ -111,18 +111,33 @@ function fbSubscribeNews(callback) {
 
 // Cargar Contenido General de la Página
 // Cargar Contenido General de la Página (Con valores por defecto para evitar errores)
+// Cargar Contenido General de la Página (Blindaje total de propiedades)
 async function fbLoadContent() {
-    if (!isFirestoreReady()) return { titulo: "", descripcion: "" };
+    if (!isFirestoreReady()) return { titulo: "", subtitulo: "", descripcion: "", bannerText: "", aboutText: "" };
     try {
         const docRef = await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_CONTENT).get();
         if (docRef.exists && docRef.data()) {
             const data = docRef.data();
             return {
                 titulo: data.titulo || "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
-                descripcion: data.descripcion || "Productos de lujo seleccionados.",
+                subtitulo: data.subtitulo || "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
+                descripcion: data.descripcion || "Productos Relojes Perfumes Ropas y calzados.",
+                bannerText: data.bannerText || "",
+                aboutText: data.aboutText || "",
                 ...data
             };
         }
+    } catch (e) {
+        console.error("Error al cargar contenido:", e);
+    }
+    return { 
+        titulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama", 
+        subtitulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
+        descripcion: "Productos Relojes Perfumes Ropas y calzados.",
+        bannerText: "",
+        aboutText: ""
+    };
+}
     } catch (e) {
         console.error("Error al cargar contenido:", e);
     }
@@ -134,6 +149,7 @@ async function fbLoadContent() {
 
 // Suscripción en tiempo real para contenido
 // Suscripción en tiempo real para contenido con valores seguros
+// Suscripción en tiempo real para contenido con propiedades blindadas
 function fbSubscribeContent(callback) {
     if (!isFirestoreReady()) return null;
     return firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_CONTENT)
@@ -142,13 +158,19 @@ function fbSubscribeContent(callback) {
                 const data = doc.data();
                 callback({
                     titulo: data.titulo || "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
-                    descripcion: data.descripcion || "Productos de lujo seleccionados.",
+                    subtitulo: data.subtitulo || "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
+                    descripcion: data.descripcion || "Productos Relojes Perfumes Ropas y calzados.",
+                    bannerText: data.bannerText || "",
+                    aboutText: data.aboutText || "",
                     ...data
                 });
             } else {
                 callback({ 
                     titulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama", 
-                    descripcion: "Productos de lujo seleccionados." 
+                    subtitulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
+                    descripcion: "Productos Relojes Perfumes Ropas y calzados.",
+                    bannerText: "",
+                    aboutText: ""
                 });
             }
         }, (error) => {
