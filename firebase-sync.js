@@ -106,6 +106,21 @@ async function fbLoadContent() {
     return null;
 }
 
+// Suscripción o carga en tiempo real para contenido
+function fbSubscribeContent(callback) {
+    if (!isFirestoreReady()) return null;
+    return firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_CONTENT)
+        .onSnapshot((doc) => {
+            if (doc.exists) {
+                callback(doc.data());
+            } else {
+                callback({});
+            }
+        }, (error) => {
+            console.error("Error en tiempo real de contenido:", error);
+        });
+}
+
 // Inicialización general
 async function fbInitDataIfEmpty() {
     if (!isFirestoreReady()) return;
