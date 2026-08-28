@@ -198,22 +198,7 @@ function safeSaveToStorage(key, data) {
 // INICIALIZAR datos en Firestore (migración)
 // ═══════════════════════════════════════════════════════════
 async function fbInitDataIfEmpty() {
-    if (!isFirestoreReady()) return;
-    try {
-        const prodDoc = await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_PRODUCTS).get();
-        if (!prodDoc.exists) {
-            let products = null;
-            if (typeof window.SITE_DATA !== 'undefined' && window.SITE_DATA.products) {
-                products = window.SITE_DATA.products;
-            } else {
-                const local = localStorage.getItem('housesulvaranProducts');
-                if (local) products = JSON.parse(local);
-            }
-            if (products) {
-                await fbSaveProducts(products);
-                console.log('📤 Productos migrados a Firestore');
-            }
-        }
+   
         const newsDoc = await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_NEWS).get();
         if (!newsDoc.exists) {
             let news = null;

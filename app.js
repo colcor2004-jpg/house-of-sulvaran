@@ -51,13 +51,8 @@ let cachedContent = null;
 async function getProductsAsync() {
     if (cachedProducts) return cachedProducts;
     const fb = await fbLoadProducts();
-    if (fb) { cachedProducts = fb; return fb; }
-    if (typeof window.SITE_DATA !== 'undefined' && window.SITE_DATA.products) {
-        return window.SITE_DATA.products;
-    }
-    const local = localStorage.getItem('housesulvaranProducts');
-    if (local) { try { return JSON.parse(local); } catch(e) {} }
-    return defaultProducts;
+    cachedProducts = (fb && Array.isArray(fb)) ? fb : [];
+    return cachedProducts;
 }
 
 async function getNewsAsync() {
