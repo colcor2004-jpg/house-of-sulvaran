@@ -11,31 +11,52 @@ function isFirestoreReady() {
     return typeof firebase !== 'undefined' && firebase.firestore;
 }
 
-// Cargar Productos
+// Cargar Productos (Desde colección de documentos individuales)
 async function fbLoadProducts() {
     if (!isFirestoreReady()) return [];
     try {
-        const docRef = await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_PRODUCTS).get();
-        if (docRef.exists) {
-            const data = docRef.data();
-            if (Array.isArray(data)) return data;
-            return data.items || data.products || data.list || [];
-        }
+        const querySnapshot = await firebaseDb.collection('products').get();
+        const products = [];
+        querySnapshot.forEach((doc) => {
+            products.push(doc.data());
+        });
+        return products;
     } catch (e) {
         console.error("Error al cargar productos:", e);
     }
     return [];
 }
 
-// Guardar Productos
+// Guardar Productos (Cada producto es un documento independiente + borrado de eliminados)
 async function fbSaveProducts(products) {
     if (!isFirestoreReady()) return false;
     try {
-        await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_PRODUCTS).set({
-            items: products,
-            products: products,
-            updatedAt: new Date().toISOString()
-        }, { merge: true });
+        const batch = firebaseDb.batch();
+        const productsRef = firebaseDb.collection('products');
+
+        // 1. Obtener los IDs que ya están en la nube para limpiar los que se hayan borrado
+        const snapshot = await productsRef.get();
+        const existingIds = new Set();
+        snapshot.forEach(doc => existingIds.add(doc.id));
+
+        const newIds = new Set(products.map(p => String(p.id)));
+
+        // 2. Marcar para borrar en Firestore los productos que ya no están
+        existingIds.forEach(id => {
+            if (!newIds.has(id)) {
+                batch.delete(productsRef.doc(id));
+            }
+        });
+
+        // 3. Guardar/Actualizar cada producto en su propio documento
+        for (const p of products) {
+            const productId = p.id ? String(p.id) : String(Date.now());
+            p.id = productId;
+            const docRef = productsRef.doc(productId);
+            batch.set(docRef, p, { merge: true });
+        }
+
+        await batch.commit();
         return true;
     } catch (e) {
         console.error("Error al guardar productos:", e);
@@ -47,21 +68,16 @@ async function hybridSaveProducts(products) {
     return await fbSaveProducts(products);
 }
 
-// Suscripción de productos
+// Suscripción de productos en tiempo real (Escucha toda la colección)
 function fbSubscribeProducts(callback) {
     if (!isFirestoreReady()) return null;
-    return firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_PRODUCTS)
-        .onSnapshot((doc) => {
-            if (doc.exists) {
-                const data = doc.data();
-                if (Array.isArray(data)) {
-                    callback(data);
-                } else {
-                    callback(data.items || data.products || data.list || []);
-                }
-            } else {
-                callback([]);
-            }
+    return firebaseDb.collection('products')
+        .onSnapshot((querySnapshot) => {
+            const products = [];
+            querySnapshot.forEach((doc) => {
+                products.push(doc.data());
+            });
+            callback(products);
         }, (error) => {
             console.error("Error en tiempo real de productos:", error);
         });
