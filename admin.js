@@ -364,24 +364,27 @@ async function deleteProduct(id) {
     
     try {
         const currentProducts = await getProductsAsync();
-        const filtered = currentProducts.filter(p => p.id !== id);
         
-        // Esperamos a que se borre de la nube y del almacenamiento local
-        await hybridSaveProducts(filtered);
-        localStorage.setItem('housesulvaranProducts', JSON.stringify(filtered));
+        // Convertimos ambos a String para asegurar que coincidan sin importar si es número o texto
+        const filtered = currentProducts.filter(p => String(p.id) !== String(id));
         
-        // Forzamos la actualización visual de la tabla inmediatamente
+        // Guardamos la nueva lista en Firestore (esto eliminará el documento de la nube automáticamente)
+        const savedToCloud = await hybridSaveProducts(filtered);
+        if (!savedToCloud) {
+            localStorage.setItem('housesulvaranProducts', JSON.stringify(filtered));
+        }
+        
+        // Actualizamos la tabla visualmente al instante
         if (typeof renderProductsTable === 'function') {
             await renderProductsTable();
         } else {
-            location.reload(); // Recarga de emergencia si la tabla no se refresca sola
+            location.reload();
         }
     } catch (err) {
-        console.error("Error al eliminar:", err);
-        alert("Hubo un error al eliminar el producto.");
+        console.error("Error al eliminar el producto:", err);
+        alert("Hubo un error al intentar eliminar el producto.");
     }
 }
-
 async function resetProducts() {
     if (!confirm('¿Deseas vaciar todos los productos del inventario?')) return;
     await hybridSaveProducts([]);
