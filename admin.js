@@ -270,41 +270,48 @@ async function openProductModal(productId = null) {
     const form = document.getElementById('productForm');
     const title = document.getElementById('modalTitle');
     
-    form.reset();
-    resetGallery();
-    document.getElementById('productId').value = '';
-    
-    const products = await getProductsAsync();
+    // 1. Abrir el modal y limpiar de inmediato para que la respuesta sea instantánea
+    if (modal) modal.classList.add('active');
+    if (form) form.reset();
+    if (typeof resetGallery === 'function') resetGallery();
+    const prodIdInput = document.getElementById('productId');
+    if (prodIdInput) prodIdInput.value = '';
 
-    if (productId) {
-        title.textContent = 'Editar Producto';
-        const product = products.find(p => p.id == productId);
-        if (product) {
-            document.getElementById('productId').value = product.id;
-            document.getElementById('productName').value = product.name || '';
-            document.getElementById('productCategory').value = product.category || 'Reloj';
-            document.getElementById('productPrice').value = product.price || '';
-            document.getElementById('productStatus').value = product.status || 'disponible';
-            document.getElementById('productDesc').value = product.description || '';
-            
-            if (product.images && product.images.length > 0) {
-                galleryImages = [...product.images];
-                document.getElementById('productImageUrl').value = product.images[0] || '';
-            } else if (product.image) {
-                galleryImages = [product.image];
-                document.getElementById('productImageUrl').value = product.image;
-            }
-            renderGalleryPreviews();
-        }
-    } else {
-        title.textContent = 'Nuevo Producto';
-        document.getElementById('productStatus').value = 'disponible';
+    if (!productId) {
+        if (title) title.textContent = 'Nuevo Producto';
+        const statusSelect = document.getElementById('productStatus');
+        if (statusSelect) statusSelect.value = 'disponible';
+        return; // Si es nuevo, no necesitamos esperar los productos
     }
-    modal.classList.add('active');
+
+    // 2. Si es para editar, cargamos los datos en segundo plano
+    if (title) title.textContent = 'Editar Producto';
+    const products = await getProductsAsync();
+    const product = products.find(p => p.id == productId);
+    
+    if (product) {
+        document.getElementById('productId').value = product.id;
+        document.getElementById('productName').value = product.name || '';
+        document.getElementById('productCategory').value = product.category || 'Reloj';
+        document.getElementById('productPrice').value = product.price || '';
+        document.getElementById('productStatus').value = product.status || 'disponible';
+        document.getElementById('productDesc').value = product.description || '';
+        
+        if (product.images && product.images.length > 0) {
+            galleryImages = [...product.images];
+            document.getElementById('productImageUrl').value = product.images[0] || '';
+        } else if (product.image) {
+            galleryImages = [product.image];
+            document.getElementById('productImageUrl').value = product.image;
+        }
+        if (typeof renderGalleryPreviews === 'function') renderGalleryPreviews();
+    }
 }
+
 function closeProductModal() {
-    document.getElementById('productModal').classList.remove('active');
-    resetGallery();
+    const modal = document.getElementById('productModal');
+    if (modal) modal.classList.remove('active');
+    if (typeof resetGallery === 'function') resetGallery();
 }
 
 async function saveProduct(e) {
@@ -785,7 +792,7 @@ async function exportDataJS() {
     const products = await getProductsAsync();
     const news = getNews();
     const content = getContent();
-    
+
     const data = `// ============================================
 // HOUSE OF SULVARAN - Datos del sitio (EXPORTADOS)
 // ============================================
