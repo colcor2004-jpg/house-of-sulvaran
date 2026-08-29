@@ -360,15 +360,26 @@ async function saveProduct(e) {
 function editProduct(id) { openProductModal(id); }
 
 async function deleteProduct(id) {
-    if (!confirm('¿Eliminar este producto?')) return;
-    const currentProducts = await getProductsAsync();
-    const filtered = currentProducts.filter(p => p.id !== id);
-
-    const savedToCloud = await hybridSaveProducts(filtered);
-    if (!savedToCloud) {
-        saveProducts(filtered);
+    if (!confirm('¿Estás seguro de que deseas eliminar este producto?')) return;
+    
+    try {
+        const currentProducts = await getProductsAsync();
+        const filtered = currentProducts.filter(p => p.id !== id);
+        
+        // Esperamos a que se borre de la nube y del almacenamiento local
+        await hybridSaveProducts(filtered);
+        localStorage.setItem('housesulvaranProducts', JSON.stringify(filtered));
+        
+        // Forzamos la actualización visual de la tabla inmediatamente
+        if (typeof renderProductsTable === 'function') {
+            await renderProductsTable();
+        } else {
+            location.reload(); // Recarga de emergencia si la tabla no se refresca sola
+        }
+    } catch (err) {
+        console.error("Error al eliminar:", err);
+        alert("Hubo un error al eliminar el producto.");
     }
-    await renderProductsTable();
 }
 
 async function resetProducts() {
