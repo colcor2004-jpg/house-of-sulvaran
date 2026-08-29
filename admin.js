@@ -363,18 +363,17 @@ async function deleteProduct(id) {
     if (!confirm('¿Estás seguro de que deseas eliminar este producto?')) return;
     
     try {
-        const currentProducts = await getProductsAsync();
-        
-        // Convertimos ambos a String para asegurar que coincidan sin importar si es número o texto
-        const filtered = currentProducts.filter(p => String(p.id) !== String(id));
-        
-        // Guardamos la nueva lista en Firestore (esto eliminará el documento de la nube automáticamente)
-        const savedToCloud = await hybridSaveProducts(filtered);
-        if (!savedToCloud) {
-            localStorage.setItem('housesulvaranProducts', JSON.stringify(filtered));
+        // 1. Borrar el documento individual directamente de la colección en Firestore
+        if (typeof firebaseDb !== 'undefined' && firebaseDb) {
+            await firebaseDb.collection('products').doc(String(id)).delete();
         }
         
-        // Actualizamos la tabla visualmente al instante
+        // 2. Limpiar también del almacenamiento local
+        const currentProducts = await getProductsAsync();
+        const filtered = currentProducts.filter(p => String(p.id) !== String(id));
+        localStorage.setItem('housesulvaranProducts', JSON.stringify(filtered));
+        
+        // 3. Actualizar la tabla visualmente
         if (typeof renderProductsTable === 'function') {
             await renderProductsTable();
         } else {
