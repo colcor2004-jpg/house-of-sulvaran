@@ -204,8 +204,8 @@ function compressImage(file, maxWidth, quality) {
 }
 
 // ===== PRODUCTS =====
-function updateProductStats() {
-    const products = getProducts();
+async function updateProductStats() {
+    const products = await getProductsAsync();
     const watches = products.filter(p => p.category === 'Reloj').length;
     const perfumes = products.filter(p => p.category === 'Perfume').length;
     const clothes = products.filter(p => p.category === 'Ropa').length;
@@ -220,16 +220,15 @@ function updateProductStats() {
     document.getElementById('statClothes').textContent = clothes;
     document.getElementById('statShoes').textContent = shoes;
     document.getElementById('statValue').textContent = formatPrice(totalValue);
-    const extra = document.getElementById('statExtraRow');
+    const extra = document.getElementById('stateExtraRow');
     if (extra) {
         extra.innerHTML = `
-            <div class="stat-card"><div class="stat-card-value" style="color:#22c55e">${available}</div><div class="stat-card-label">Disponibles</div></div>
-            <div class="stat-card"><div class="stat-card-value" style="color:#ef4444">${soldout}</div><div class="stat-card-label">Agotados</div></div>
-            <div class="stat-card"><div class="stat-card-value" style="color:#f59e0b">${preorder}</div><div class="stat-card-label">Bajo Pedido</div></div>
+            <div class="stat-card"><div class="stat-card-value">${available}</div><div>Disponibles</div></div>
+            <div class="stat-card"><div class="stat-card-value">${soldout}</div><div>Agotados</div></div>
+            <div class="stat-card"><div class="stat-card-value">${preorder}</div><div>Bajo Pedido</div></div>
         `;
     }
 }
-
 async function renderProductsTable() {
     const tbody = document.getElementById('productsTableBody');
     const products = await getProductsAsync();
