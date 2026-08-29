@@ -238,9 +238,7 @@ function loadContent() {
     setText('heroDesc', c.heroDesc);
     setText('productsTitle', c.productsTitle);
     setText('newsTitle', c.newsTitle);
-   setHtml('aboutTitle', (c.aboutTitle || "").replace(/(HOUSE OF SULVARAN|JS Perfumeria)/g, '<span class="highlight">$1</span>'));
-    setHtml('aboutTitle', c.aboutTitle.||replace(/(HOUSE OF SULVARAN|JS Prendas)/g, '<span class="gold-text">$1</span>'));
-    setSrc('aboutImage', c.aboutImage);
+   setHtml('aboutTitle', (c.aboutTitle || "").replace(/(HOUSE OF SULVARAN|JS Prendas|JS Perfumeria)/g, '<span class="gold-text">$1</span>'));
     setText('contactLocation', c.contactLocation);
     setText('contactHours', c.contactHours);
     setHref('tiktokLink', c.tiktokUrl);

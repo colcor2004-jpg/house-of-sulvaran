@@ -161,4 +161,41 @@ async function fbInitDataIfEmpty() {
     } catch (e) {
         console.error('Error inicializando Firestore:', e);
     }
+}// Guardar Noticias
+async function fbSaveNews(news) {
+    if (!isFirestoreReady()) return false;
+    try {
+        await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_NEWS).set({
+            items: news,
+            news: news,
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
+        return true;
+    } catch (e) {
+        console.error("Error al guardar noticias:", e);
+        return false;
+    }
+}
+
+async function hybridSaveNews(news) {
+    return await fbSaveNews(news);
+}
+
+// Guardar Contenido General
+async function fbSaveContent(content) {
+    if (!isFirestoreReady()) return false;
+    try {
+        await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_CONTENT).set({
+            ...content,
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
+        return true;
+    } catch (e) {
+        console.error("Error al guardar contenido:", e);
+        return false;
+    }
+}
+
+async function hybridSaveContent(content) {
+    return await fbSaveContent(content);
 }
