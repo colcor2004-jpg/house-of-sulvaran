@@ -265,34 +265,43 @@ async function renderProductsTable() {
     updateProductStats();
 }
 
-function openProductModal(productId = null) {
+async function openProductModal(productId = null) {
     const modal = document.getElementById('productModal');
-    const title = document.getElementById('productModalTitle');
     const form = document.getElementById('productForm');
+    const title = document.getElementById('modalTitle');
+    
     form.reset();
     resetGallery();
+    document.getElementById('productId').value = '';
+    
+    const products = await getProductsAsync();
+
     if (productId) {
-        const product = getProducts().find(p => p.id === productId);
+        title.textContent = 'Editar Producto';
+        const product = products.find(p => p.id == productId);
         if (product) {
-            title.textContent = 'Editar Producto';
             document.getElementById('productId').value = product.id;
-            document.getElementById('productName').value = product.name;
-            document.getElementById('productCategory').value = product.category;
-            document.getElementById('productPrice').value = product.price;
+            document.getElementById('productName').value = product.name || '';
+            document.getElementById('productCategory').value = product.category || 'Reloj';
+            document.getElementById('productPrice').value = product.price || '';
             document.getElementById('productStatus').value = product.status || 'disponible';
-            document.getElementById('productDesc').value = product.description;
-            const images = product.images || (product.image ? [product.image] : []);
-            document.getElementById('productImageUrl').value = images[0] || '';
-            loadGalleryImages(images.slice(0, 3));
+            document.getElementById('productDesc').value = product.description || '';
+            
+            if (product.images && product.images.length > 0) {
+                galleryImages = [...product.images];
+                document.getElementById('productImageUrl').value = product.images[0] || '';
+            } else if (product.image) {
+                galleryImages = [product.image];
+                document.getElementById('productImageUrl').value = product.image;
+            }
+            renderGalleryPreviews();
         }
     } else {
         title.textContent = 'Nuevo Producto';
-        document.getElementById('productId').value = '';
         document.getElementById('productStatus').value = 'disponible';
     }
     modal.classList.add('active');
 }
-
 function closeProductModal() {
     document.getElementById('productModal').classList.remove('active');
     resetGallery();
@@ -772,11 +781,11 @@ async function handleFile(file, previewEl, urlInputEl, base64Var) {
     }
 }
 
-function exportDataJS() {
-    const products = getProducts();
+async function exportDataJS() {
+    const products = await getProductsAsync();
     const news = getNews();
     const content = getContent();
-
+    
     const data = `// ============================================
 // HOUSE OF SULVARAN - Datos del sitio (EXPORTADOS)
 // ============================================
