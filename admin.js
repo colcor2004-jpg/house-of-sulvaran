@@ -315,7 +315,7 @@ async function saveProduct(e) {
     images = images.slice(0, 3);
     let image = images[0] || '';
 
-    let products = getProducts();
+    let products = await getProductsAsync();
     if (id) {
         const idx = products.findIndex(p => p.id == id);
         if (idx !== -1) products[idx] = { ...products[idx], name, category, price, status, description, image, images };
@@ -337,7 +337,7 @@ async function saveProduct(e) {
         }
     }
 
-    renderProductsTable();
+    await renderProductsTable();
     closeProductModal();
 }
 
@@ -345,13 +345,14 @@ function editProduct(id) { openProductModal(id); }
 
 async function deleteProduct(id) {
     if (!confirm('¿Eliminar este producto?')) return;
-    const filtered = getProducts().filter(p => p.id !== id);
+    const currentProducts = await getProductsAsync();
+    const filtered = currentProducts.filter(p => p.id !== id);
 
     const savedToCloud = await hybridSaveProducts(filtered);
     if (!savedToCloud) {
         saveProducts(filtered);
     }
-    renderProductsTable();
+    await renderProductsTable();
 }
 
 async function resetProducts() {
