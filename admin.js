@@ -824,6 +824,28 @@ window.SITE_DATA = {
     alert('✅ data.js descargado.\n\nSube este archivo a tu hosting (Netlify/Vercel/GitHub Pages) reemplazando el data.js anterior.\n\nAsí TODOS los usuarios verán los cambios que hiciste.');
 }
 
+async function deleteProduct(id) {
+    if (!confirm('¿Estás seguro de que deseas eliminar este producto?')) return;
+    
+    try {
+        if (typeof firebaseDb !== 'undefined' && firebaseDb) {
+            await firebaseDb.collection('products').doc(String(id)).delete();
+        }
+        
+        cachedAdminProducts = null;
+        if (typeof renderProductsTable === 'function') {
+            await renderProductsTable();
+        } else {
+            location.reload();
+        }
+        
+        alert('🗑️ Producto eliminado correctamente de la nube.');
+    } catch (err) {
+        console.error("Error al eliminar el producto:", err);
+        alert("Hubo un error al intentar eliminar el producto.");
+    }
+}
+
 function init() {
     if (!checkAdmin()) return;
     initFirebaseAdmin();
