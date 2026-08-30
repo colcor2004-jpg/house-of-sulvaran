@@ -199,8 +199,7 @@ function compressImage(file, maxWidth, quality) {
                 ctx.fillStyle = '#FFFFFF';
                 ctx.fillRect(0, 0, w, h);
                 ctx.drawImage(img, 0, 0, w, h);
-                const dataUrl = canvas.toDataURL('image/jpeg', quality);
-                resolve(dataUrl);
+const dataUrl = canvas.toDataURL('image/jpeg', 0.5);                resolve(dataUrl);
             };
             img.onerror = function() {
                 reject(new Error('No se pudo cargar la imagen para comprimir'));
