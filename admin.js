@@ -46,26 +46,21 @@ function checkAdmin() {
 let cachedAdminProducts = null;
 
 async function getProductsAsync() {
-    if (cachedAdminProducts) return cachedAdminProducts;
-    if (typeof fbLoadProducts === 'function') {
-        const fb = await fbLoadProducts();
-        if (fb && Array.isArray(fb) && fb.length > 0) {
-            cachedAdminProducts = fb;
-            return cachedAdminProducts;
-        }
-    }
-    const local = localStorage.getItem('housesulvaranProducts');
-    if (local) {
-        try { 
-            const parsed = JSON.parse(local);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-                cachedAdminProducts = parsed;
+    try {
+        // Consultamos siempre directo a la nube de Firestore
+        if (typeof fbLoadProducts === 'function') {
+            const cloudProducts = await fbLoadProducts();
+            if (cloudProducts !== null && Array.isArray(cloudProducts)) {
+                cachedAdminProducts = cloudProducts; // Actualizamos la caché con lo real de la nube
                 return cachedAdminProducts;
             }
-        } catch(e) {}
+        }
+    } catch (e) {
+        console.error("Error al obtener productos de la nube:", e);
     }
-    cachedAdminProducts = [];
-    return cachedAdminProducts;
+    
+    // Si la nube falla por completo, usamos la caché o un arreglo vacío como respaldo
+    return cachedAdminProducts || [];
 }
 function getNews() {
     const local = localStorage.getItem('housesulvaranNews');
@@ -120,8 +115,24 @@ function safeSaveToStorage(key, data) {
     }
 }
 
-function saveProducts(p) { return safeSaveToStorage('housesulvaranProducts', p); }
-function saveNews(n) { return safeSaveToStorage('housesulvaranNews', n); }
+async function saveProducts(productsArray) {
+    try {
+        if (typeof firebaseDb !== 'undefined' && firebaseDb && Array.isArray(productsArray)) {
+            const batch = firebaseDb.batch();
+            productsArray.forEach(product => {
+                if (!product.id) product.id = String(Date.now());
+                const docRef = firebaseDb.collection('products').doc(String(product.id));
+                batch.set(docRef, product, { merge: true });
+            });
+            await batch.commit();
+            cachedAdminProducts = productsArray;
+            return true;
+        }
+    } catch (e) {
+        console.error("Error al guardar en Firestore:", e);
+    }
+    return safeSaveToStorage('housesulvaranProducts', productsArray);
+}function saveNews(n) { return safeSaveToStorage('housesulvaranNews', n); }
 function saveContentObj(c) { return safeSaveToStorage('housesulvaranContent', c); }
 
 function formatPrice(price) {
