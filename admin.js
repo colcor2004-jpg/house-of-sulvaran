@@ -325,11 +325,12 @@ function closeProductModal() {
 }
 
 async function saveProduct(e) {
-    e.preventDefault();
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    
     const id = document.getElementById('productId').value;
     const name = document.getElementById('productName').value.trim();
     const category = document.getElementById('productCategory').value;
-    const price = parseFloat(document.getElementById('productPrice').value);
+    const price = parseFloat(document.getElementById('productPrice').value) || 0;
     const status = document.getElementById('productStatus').value;
     const description = document.getElementById('productDesc').value.trim();
 
@@ -341,57 +342,38 @@ async function saveProduct(e) {
     images = images.slice(0, 3);
     let image = images[0] || '';
 
-    let products = await getProductsAsync();
-    if (id) {
-        const idx = products.findIndex(p => p.id == id);
-        if (idx !== -1) products[idx] = { ...products[idx], name, category, price, status, description, image, images };
-    } else {
-        products.push({ id: generateId(), name, category, price, status, description, image, images });
-    }
+    const productId = id ? String(id) : String(Date.now());
+    const productData = { id: productId, name, category, price, status, description, image, images };
 
-    // GUARDADO HÍBRIDO: Firestore + localStorage
-    const savedToCloud = await hybridSaveProducts(products);
-
-    if (savedToCloud) {
-        alert('✅ Producto guardado en la NUBE. Todos los usuarios lo verán automáticamente.');
-    } else {
-        // Fallback a localStorage
-        if (saveProducts(products)) {
-            alert('✅ Producto guardado localmente.\n\n⚠️ Para que otros dispositivos lo vean, exporta data.js y súbelo al hosting.');
-        } else {
-            return; // Error guardando
-        }
-    }
-
-    await renderProductsTable();
-    closeProductModal();
-}
-
-function editProduct(id) { openProductModal(id); }
-
-async function deleteProduct(id) {
-    if (!confirm('¿Estás seguro de que deseas eliminar este producto?')) return;
-    
     try {
-        // 1. Borrar el documento individual directamente de la colección en Firestore
+        // Guardamos ÚNICAMENTE este documento individual en la colección de Firestore
         if (typeof firebaseDb !== 'undefined' && firebaseDb) {
-            await firebaseDb.collection('products').doc(String(id)).delete();
+            await firebaseDb.collection('products').doc(productId).set(productData, { merge: true });
+            alert('✅ Producto guardado exitosamente en la NUBE.');
+        } else {
+            // Respaldo local si no hay conexión a Firebase
+            let products = await getProductsAsync();
+            if (id) {
+                const idx = products.findIndex(p => p.id == id);
+                if (idx !== -1) products[idx] = productData;
+            } else {
+                products.push(productData);
+            }
+            saveProducts(products);
+            alert('✅ Producto guardado localmente.');
         }
-        
-        // 2. Limpiar también del almacenamiento local
-        const currentProducts = await getProductsAsync();
-        const filtered = currentProducts.filter(p => String(p.id) !== String(id));
-        localStorage.setItem('housesulvaranProducts', JSON.stringify(filtered));
-        
-        // 3. Actualizar la tabla visualmente
+
+        cachedAdminProducts = null;
         if (typeof renderProductsTable === 'function') {
             await renderProductsTable();
         } else {
             location.reload();
         }
+        closeProductModal();
+        
     } catch (err) {
-        console.error("Error al eliminar el producto:", err);
-        alert("Hubo un error al intentar eliminar el producto.");
+        console.error("Error al guardar el producto:", err);
+        alert("Hubo un error al intentar guardar el producto en la nube.");
     }
 }
 async function resetProducts() {
