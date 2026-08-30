@@ -862,3 +862,32 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+window.deleteProduct = async function(id) {
+    if (!confirm('¿Estás seguro de que deseas eliminar este producto?')) return;
+    
+    try {
+        if (typeof firebaseDb !== 'undefined' && firebaseDb) {
+            await firebaseDb.collection('products').doc(String(id)).delete();
+        }
+        
+        cachedAdminProducts = null;
+        if (typeof renderProductsTable === 'function') {
+            await renderProductsTable();
+        } else {
+            location.reload();
+        }
+        
+        alert('🗑️ Producto eliminado correctamente.');
+    } catch (err) {
+        console.error("Error al eliminar el producto:", err);
+        alert("Hubo un error al intentar eliminar el producto.");
+    }
+};
+
+window.editProduct = function(id) {
+    if (typeof openProductModal === 'function') {
+        openProductModal(id);
+    } else {
+        console.error("La función openProductModal no está definida.");
+    }
+};
