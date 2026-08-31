@@ -188,7 +188,7 @@ let currentDetailImages = [];
 let currentDetailIndex = 0;
 
 function openProductDetailModal(productId) {
-    const product = allProducts.find(p => p.id === productId);
+    const product = allProducts.find(p => String(p.id) === String(productId));
     if (!product) return;
 
     const images = product.images || (product.image ? [product.image] : []);
