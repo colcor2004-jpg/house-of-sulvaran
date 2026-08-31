@@ -32,8 +32,7 @@ function initFirebase() {
             firebaseAuth = firebase.auth();
         }
         if (!firebaseDb) {
-            firebaseDb = firebase.firestore();
-        }
+firebaseDb = firebase.app().firestore();        }
         console.log('✅ Firebase inicializado correctamente (modo local)');
         return true;
     } catch (e) {
