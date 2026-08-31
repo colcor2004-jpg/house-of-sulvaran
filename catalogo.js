@@ -292,7 +292,6 @@ document.addEventListener('click', (e) => {
     if (card) {
         const productId = card.getAttribute('data-product-id');
         if (productId) {
-            openProductDetailModal(isNaN(productId) ? productId : Number(productId));
-        }
+openProductDetailModal(isNaN(productId) ? productId : Number(productId));        }
     }
 });
