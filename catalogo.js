@@ -143,24 +143,23 @@ function renderCatalogo() {
         const opacityClass = p.status === 'agotado' ? 'product-agotado' : '';
 
         return `
-        <div class="product-card fade-in ${opacityClass}" onclick="openProductDetailModal(${p.id})">
-            <div class="product-gallery-main">
-                <img src="${mainImg}" alt="${p.name}" class="product-image" onerror="this.src='https://images.unsplash.com/photo-1612817159949-195b6eb9e31a?w=600&q=80'">
-                ${images.length > 1 ? `<div class="product-gallery-count">${images.length} fotos</div>` : ''}
-                <div class="product-status-overlay">${statusBadge}</div>
-            </div>
-            <div class="product-info">
-                <p class="product-category">${p.category}</p>
-                <h3 class="product-name">${p.name}</h3>
-                <p class="product-desc">${p.description}</p>
-                <div class="product-footer">
-                    <span class="product-price">${formatPrice(p.price)}</span>
-                    <span class="product-btn" style="pointer-events:none;">Ver Detalle →</span>
-                </div>
+    <div class="product-card fade-in ${opacityClass}" data-product-id="${p.id}">
+        <div class="product-gallery-main">
+            <img src="${mainImg}" alt="${p.name}" class="product-image" onerror="this.src='https://images.unsplash.com/photo-1612817159949-195b6eb9e31a?w=600&q=80'">
+            ${images.length > 1 ? `<div class="product-gallery-count">${images.length} fotos</div>` : ''}
+            <div class="product-status-overlay">${statusBadge}</div>
+        </div>
+        <div class="product-info">
+            <p class="product-category">${p.category}</p>
+            <h3 class="product-name">${p.name}</h3>
+            <p class="product-desc">${p.description}</p>
+            <div class="product-footer">
+                <span class="product-price">${formatPrice(p.price)}</span>
+                <span class="product-btn" style="pointer-events:none;">Ver Detalle →</span>
             </div>
         </div>
-    `}).join('');
-}
+    </div>
+    `;
 
 function updateCount() {
     const count = getFilteredProducts().length;
@@ -287,3 +286,14 @@ document.addEventListener('keydown', function(e) {
 });
 
 document.addEventListener('DOMContentLoaded', initCatalogo);
+
+document.addEventListener('click', (e) => {
+    const card = e.target.closest('.product-card');
+    if (card) {
+        const productId = card.getAttribute('data-product-id');
+        if (productId) {
+            // Si tus IDs son números usa parseInt(productId), si son textos déjalo como productId directo
+            openProductDetailModal(isNaN(productId) ? productId : Number(productId));
+        }
+    }
+});
