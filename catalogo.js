@@ -295,3 +295,4 @@ document.addEventListener('click', (e) => {
 openProductDetailModal(isNaN(productId) ? productId : Number(productId));        }
     }
 });
+}
