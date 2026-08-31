@@ -292,7 +292,6 @@ document.addEventListener('click', (e) => {
     if (card) {
         const productId = card.getAttribute('data-product-id');
         if (productId) {
-            // Si tus IDs son números usa parseInt(productId), si son textos déjalo como productId directo
             openProductDetailModal(isNaN(productId) ? productId : Number(productId));
         }
     }
