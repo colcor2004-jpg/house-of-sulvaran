@@ -199,6 +199,7 @@ async function hybridSaveNews(news) {
 
 // Guardar Contenido General
 async function fbSaveContent(content) {
+    localStorage.setItem('housesulvaranContent', JSON.stringify(content));
     if (!isFirestoreReady()) return false;
     try {
         await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_CONTENT).set({
