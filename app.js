@@ -230,28 +230,60 @@ function loadContent() {
         c = getContent();
     }
 
-    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-    const setHtml = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
-    const setSrc = (id, val) => { const el = document.getElementById(id); if (el) el.src = val; };
-    const setHref = (id, val) => { const el = document.getElementById(id); if (el) el.href = val; };
+    // Si aún así no hay datos, salimos para no romper el HTML original
+    if (!c) return;
 
-    setText('heroSubtitle', c.heroSubtitle);
-    setHtml('heroTitle', (c.heroTitle || "").replace(/(Alta Gama|alta gama)/g, '<span class="highlight">$1</span>'));
-    setText('heroDesc', c.heroDesc);
-    setText('productsTitle', c.productsTitle);
-    setText('newsTitle', c.newsTitle);
-    setHtml('aboutTitle', (c.aboutTitle || "").replace(/(HOUSE OF SULVARAN|JS Prendas|JS Perfumeria)/g, '<span class="gold-text">$1</span>'));
+    // Funciones seguras que evitan sobreescribir con valores vacíos o nulos
+    const setText = (id, val) => { 
+        if (val !== undefined && val !== null && val !== "") {
+            const el = document.getElementById(id); 
+            if (el) el.textContent = val; 
+        }
+    };
     
-    // Asignación explícita para los párrafos de Sobre Nosotros
-    setText('aboutText1', c.aboutText1);
-    setText('aboutText2', c.aboutText2);
+    const setHtml = (id, val) => { 
+        if (val !== undefined && val !== null && val !== "") {
+            const el = document.getElementById(id); 
+            if (el) el.innerHTML = val; 
+        }
+    };
+    
+    const setSrc = (id, val) => { 
+        if (val !== undefined && val !== null && val !== "") {
+            const el = document.getElementById(id); 
+            if (el) el.src = val; 
+        }
+    };
+    
+    const setHref = (id, val) => { 
+        if (val !== undefined && val !== null && val !== "") {
+            const el = document.getElementById(id); 
+            if (el) el.href = val; 
+        }
+    };
 
-    setText('contactLocation', c.contactLocation);
-    setText('contactHours', c.contactHours);
-    setHref('tiktokLink', c.tiktokUrl);
-    setHref('instagramLink', c.instagramUrl);
-    setHref('footerTiktok', c.tiktokUrl);
-    setHref('footerInstagram', c.instagramUrl);
+    // Aplicación segura campo por campo
+    if (c.heroSubtitle) setText('heroSubtitle', c.heroSubtitle);
+    if (c.heroTitle) setHtml('heroTitle', c.heroTitle.replace(/(Alta Gama|alta gama)/g, '<span class="highlight">$1</span>'));
+    if (c.heroDesc) setText('heroDesc', c.heroDesc);
+    if (c.productsTitle) setText('productsTitle', c.productsTitle);
+    if (c.newsTitle) setText('newsTitle', c.newsTitle);
+    if (c.aboutTitle) setHtml('aboutTitle', c.aboutTitle.replace(/(HOUSE OF SULVARAN|JS Prendas|JS Perfumeria)/g, '<span class="gold-text">$1</span>'));
+    
+    if (c.aboutText1) setText('aboutText1', c.aboutText1);
+    if (c.aboutText2) setText('aboutText2', c.aboutText2);
+
+    if (c.contactLocation) setText('contactLocation', c.contactLocation);
+    if (c.contactHours) setText('contactHours', c.contactHours);
+    
+    if (c.tiktokUrl) {
+        setHref('tiktokLink', c.tiktokUrl);
+        setHref('footerTiktok', c.tiktokUrl);
+    }
+    if (c.instagramUrl) {
+        setHref('instagramLink', c.instagramUrl);
+        setHref('footerInstagram', c.instagramUrl);
+    }
 }
 
 function checkLoginState() {
