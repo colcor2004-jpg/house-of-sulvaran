@@ -386,3 +386,35 @@ async function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+// Función para cargar los cambios guardados desde el panel de administración
+function loadDynamicContent() {
+    const savedContent = localStorage.getItem('housesulvaranContent');
+    if (!savedContent) return;
+    
+    try {
+        const c = JSON.parse(savedContent);
+        
+        // Actualizar el Hero si existen los elementos
+        const heroSub = document.querySelector('.hero-subtitle');
+        if (heroSub && c.heroSubtitle) heroSub.textContent = c.heroSubtitle;
+
+        const heroTitle = document.querySelector('.hero-title');
+        if (heroTitle && c.heroTitle) heroTitle.textContent = c.heroTitle;
+
+        const heroDesc = document.querySelector('.hero-desc');
+        if (heroDesc && c.heroDesc) heroDesc.textContent = c.heroDesc;
+
+        // Actualizar la sección Sobre Nosotros
+        const aboutText1 = document.querySelector('.about-text-1');
+        if (aboutText1 && c.aboutText1) aboutText1.textContent = c.aboutText1;
+
+        const aboutText2 = document.querySelector('.about-text-2');
+        if (aboutText2 && c.aboutText2) aboutText2.textContent = c.aboutText2;
+
+    } catch (e) {
+        console.error("Error al cargar el contenido guardado:", e);
+    }
+}
+
+// Ejecutar al cargar la página principal
+document.addEventListener('DOMContentLoaded', loadDynamicContent);
