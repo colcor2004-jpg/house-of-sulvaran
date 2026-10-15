@@ -218,18 +218,34 @@ function renderNews() {
 }
 
 function loadContent() {
-    const c = getContent();
+    // 1. Intentar obtener los datos guardados desde localStorage
+    let c = null;
+    const local = localStorage.getItem('housesulvaranContent');
+    if (local) {
+        try { c = JSON.parse(local); } catch(e) {}
+    }
+    
+    // 2. Si no hay datos en localStorage, recurrir a getContent()
+    if (!c) {
+        c = getContent();
+    }
+
     const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
     const setHtml = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
     const setSrc = (id, val) => { const el = document.getElementById(id); if (el) el.src = val; };
     const setHref = (id, val) => { const el = document.getElementById(id); if (el) el.href = val; };
 
     setText('heroSubtitle', c.heroSubtitle);
-   setHtml('heroTitle', (c.heroTitle || "").replace(/(Alta Gama|alta gama)/g, '<span class="highlight">$1</span>'));
+    setHtml('heroTitle', (c.heroTitle || "").replace(/(Alta Gama|alta gama)/g, '<span class="highlight">$1</span>'));
     setText('heroDesc', c.heroDesc);
     setText('productsTitle', c.productsTitle);
     setText('newsTitle', c.newsTitle);
-   setHtml('aboutTitle', (c.aboutTitle || "").replace(/(HOUSE OF SULVARAN|JS Prendas|JS Perfumeria)/g, '<span class="gold-text">$1</span>'));
+    setHtml('aboutTitle', (c.aboutTitle || "").replace(/(HOUSE OF SULVARAN|JS Prendas|JS Perfumeria)/g, '<span class="gold-text">$1</span>'));
+    
+    // Asignación explícita para los párrafos de Sobre Nosotros
+    setText('aboutText1', c.aboutText1);
+    setText('aboutText2', c.aboutText2);
+
     setText('contactLocation', c.contactLocation);
     setText('contactHours', c.contactHours);
     setHref('tiktokLink', c.tiktokUrl);
