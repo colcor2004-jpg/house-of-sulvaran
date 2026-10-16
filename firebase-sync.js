@@ -143,7 +143,12 @@ async function fbLoadContent() {
 
 // Suscripción de contenido
 function fbSubscribeContent(callback) {
-    if (!isFirestoreReady()) return null;
+    // Blindaje extra: si firebaseDb es nulo o indefinido, salimos sin romper la app
+    if (!isFirestoreReady() || typeof firebaseDb === 'undefined' || !firebaseDb) {
+        console.warn("Firebase DB aún no está inicializado para la suscripción.");
+        return null;
+    }
+
     return firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_CONTENT)
         .onSnapshot((doc) => {
             if (doc.exists && doc.data()) {
@@ -159,8 +164,8 @@ function fbSubscribeContent(callback) {
             } else {
                 callback({ 
                     titulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama", 
-                    subtitulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
-                    descripcion: "Productos Relojes Perfumes Ropas y calzados.",
+                    subtitulo: "ELEGANCIA Y DISTINCION",
+                    descripcion: "Piezas Exclusivas con altos estandares de calidad. Bienvenidos!.",
                     bannerText: "",
                     aboutText: ""
                 });
