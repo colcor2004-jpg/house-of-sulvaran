@@ -217,44 +217,49 @@ function renderNews() {
     `).join('');
 }
 
-function loadContent() {
-    // 1. Intentar obtener los datos guardados desde localStorage
+async function loadContent() {
     let c = null;
-    const local = localStorage.getItem('housesulvaranContent');
-    if (local) {
-        try { c = JSON.parse(local); } catch(e) {}
+
+    // 1. Intentar cargar directamente desde la nube de Firebase
+    if (typeof isFirestoreReady === 'function' && isFirestoreReady() && typeof firebaseDb !== 'undefined') {
+        try {
+            const docRef = await firebaseDb.collection("housesulvaran_data").doc("content").get();
+            if (docRef.exists && docRef.data()) {
+                c = docRef.data();
+                localStorage.setItem('housesulvaranContent', JSON.stringify(c));
+            }
+        } catch (e) {
+            console.log("No se pudo conectar a la nube, usando respaldo local.");
+        }
     }
-    
-    // 2. Si no hay datos en localStorage, recurrir a getContent()
+
+    // 2. Si la nube no respondió, usar localStorage
     if (!c) {
+        const local = localStorage.getItem('housesulvaranContent');
+        if (local) {
+            try { c = JSON.parse(local); } catch(e) {}
+        }
+    }
+
+    // 3. Si aún no hay nada, usar valores por defecto
+    if (!c && typeof getContent === 'function') {
         c = getContent();
     }
 
-    // Si aún así no hay datos, salimos para no romper el HTML original
     if (!c) return;
 
-    // Funciones seguras que evitan sobreescribir con valores vacíos o nulos
     const setText = (id, val) => { 
         if (val !== undefined && val !== null && val !== "") {
             const el = document.getElementById(id); 
             if (el) el.textContent = val; 
         }
     };
-    
     const setHtml = (id, val) => { 
         if (val !== undefined && val !== null && val !== "") {
             const el = document.getElementById(id); 
             if (el) el.innerHTML = val; 
         }
     };
-    
-    const setSrc = (id, val) => { 
-        if (val !== undefined && val !== null && val !== "") {
-            const el = document.getElementById(id); 
-            if (el) el.src = val; 
-        }
-    };
-    
     const setHref = (id, val) => { 
         if (val !== undefined && val !== null && val !== "") {
             const el = document.getElementById(id); 
@@ -262,7 +267,6 @@ function loadContent() {
         }
     };
 
-    // Aplicación segura campo por campo
     if (c.heroSubtitle) setText('heroSubtitle', c.heroSubtitle);
     if (c.heroTitle) setHtml('heroTitle', c.heroTitle.replace(/(Alta Gama|alta gama)/g, '<span class="highlight">$1</span>'));
     if (c.heroDesc) setText('heroDesc', c.heroDesc);
@@ -275,7 +279,6 @@ function loadContent() {
 
     if (c.contactLocation) setText('contactLocation', c.contactLocation);
     if (c.contactHours) setText('contactHours', c.contactHours);
-    
     if (c.tiktokUrl) {
         setHref('tiktokLink', c.tiktokUrl);
         setHref('footerTiktok', c.tiktokUrl);
@@ -395,74 +398,3 @@ async function trackWhatsAppClick(event) {
     }
 }
 
-async function init() {
-    // Inicializar Firebase si está configurado
-    if (typeof initFirebase === 'function') initFirebase();
-
-    // Cargar datos (Firestore primero, luego SITE_DATA, luego localStorage)
-    cachedProducts = await getProductsAsync();
-    cachedNews = await getNewsAsync();
-    cachedContent = await getContentAsync();
-
-    // Suscribirse a cambios en tiempo real si Firestore está disponible
-    if (isFirestoreReady()) {
-        fbSubscribeProducts(products => {
-            cachedProducts = products;
-            renderProducts(6);
-        });
-        fbSubscribeNews(news => {
-            cachedNews = news;
-            renderNews();
-        });
-        fbSubscribeContent(content => {
-            cachedContent = content;
-            loadContent();
-            loadStats();
-        });
-        console.log('🔥 Firestore activo: sincronización en tiempo real');
-    } else {
-        console.log('🔒 Modo local: usa "Exportar data.js" para compartir cambios');
-    }
-
-    renderProducts(6);
-    renderNews();
-    loadContent();
-    loadStats();
-    checkLoginState();
-    initNavbar();
-    initSmoothScroll();
-}
-
-document.addEventListener('DOMContentLoaded', init);
-// Función para cargar los cambios guardados desde el panel de administración
-function loadDynamicContent() {
-    const savedContent = localStorage.getItem('housesulvaranContent');
-    if (!savedContent) return;
-    
-    try {
-        const c = JSON.parse(savedContent);
-        
-        // Actualizar el Hero si existen los elementos
-        const heroSub = document.querySelector('.hero-subtitle');
-        if (heroSub && c.heroSubtitle) heroSub.textContent = c.heroSubtitle;
-
-        const heroTitle = document.querySelector('.hero-title');
-        if (heroTitle && c.heroTitle) heroTitle.textContent = c.heroTitle;
-
-        const heroDesc = document.querySelector('.hero-desc');
-        if (heroDesc && c.heroDesc) heroDesc.textContent = c.heroDesc;
-
-        // Actualizar la sección Sobre Nosotros
-        const aboutText1 = document.querySelector('.about-text-1');
-        if (aboutText1 && c.aboutText1) aboutText1.textContent = c.aboutText1;
-
-        const aboutText2 = document.querySelector('.about-text-2');
-        if (aboutText2 && c.aboutText2) aboutText2.textContent = c.aboutText2;
-
-    } catch (e) {
-        console.error("Error al cargar el contenido guardado:", e);
-    }
-}
-
-// Ejecutar al cargar la página principal
-document.addEventListener('DOMContentLoaded', loadDynamicContent);
