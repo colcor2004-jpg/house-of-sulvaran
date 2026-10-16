@@ -68,21 +68,29 @@ async function hybridSaveProducts(products) {
     return await fbSaveProducts(products);
 }
 
-// Suscripción de productos en tiempo real (Escucha toda la colección)
+// Suscripción de productos en tiempo real con reintento automático
 function fbSubscribeProducts(callback) {
-    if (!isFirestoreReady()) return null;
-    return firebaseDb.collection('products')
-        .onSnapshot((querySnapshot) => {
-            const products = [];
-            querySnapshot.forEach((doc) => {
-                products.push(doc.data());
-            });
-            callback(products);
-        }, (error) => {
-            console.error("Error en tiempo real de productos:", error);
-        });
-}
+    if (typeof firebaseDb === 'undefined' || !firebaseDb || !isFirestoreReady()) {
+        console.warn("Esperando a que Firebase esté listo para los productos...");
+        setTimeout(() => fbSubscribeProducts(callback), 1000); // Reintenta en 1 segundo
+        return null;
+    }
 
+    try {
+        return firebaseDb.collection('products')
+            .onSnapshot((querySnapshot) => {
+                const products = [];
+                querySnapshot.forEach((doc) => {
+                    products.push({ id: doc.id, ...doc.data() });
+                });
+                callback(products);
+            }, (error) => {
+                console.error("Error en tiempo real de productos:", error);
+            });
+    } catch (e) {
+        console.error("No se pudo establecer la suscripción de productos:", e);
+    }
+}
 // Cargar Noticias
 async function fbLoadNews() {
     if (!isFirestoreReady()) return null;
