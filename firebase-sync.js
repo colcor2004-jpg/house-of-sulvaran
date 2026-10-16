@@ -194,3 +194,26 @@ async function fbSaveContent(content) {
 async function hybridSaveContent(content) {
     return await fbSaveContent(content);
 }
+// Inicializar datos en Firestore si está vacío
+function fbInitDataIfEmpty() {
+    if (typeof firebaseDb === 'undefined' || !firebaseDb) return;
+    
+    const docRef = firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_CONTENT);
+    docRef.get().then((doc) => {
+        if (!doc.exists) {
+            docRef.set({
+                titulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
+                subtitulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
+                descripcion: "Productos Relojes Perfumes Ropas y calzados.",
+                bannerText: "",
+                aboutText: ""
+            }).then(() => {
+                console.log("Documento inicial creado en Firestore con éxito.");
+            }).catch((error) => {
+                console.error("Error al crear el documento inicial:", error);
+            });
+        }
+    }).catch((error) => {
+        console.error("Error al verificar el documento en Firestore:", error);
+    });
+}
