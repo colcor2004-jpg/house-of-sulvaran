@@ -398,3 +398,20 @@ async function trackWhatsAppClick(event) {
     }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof loadContent === 'function') {
+        loadContent();
+    }
+
+    if (typeof fbSubscribeContent === 'function') {
+        fbSubscribeContent((c) => {
+            if (!c) return;
+            const setText = (id, val) => { const el = document.getElementById(id); if (el && val) el.textContent = val; };
+            const setHtml = (id, val) => { const el = document.getElementById(id); if (el && val) el.innerHTML = val; };
+
+            if (c.heroSubtitle) setText('heroSubtitle', c.heroSubtitle);
+            if (c.heroTitle) setHtml('heroTitle', c.heroTitle);
+            if (c.heroDesc) setText('heroDesc', c.heroDesc);
+        });
+    }
+});
