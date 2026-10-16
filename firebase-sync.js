@@ -153,10 +153,10 @@ function fbSubscribeContent(callback) {
         .onSnapshot((doc) => {
             if (doc.exists && doc.data()) {
                 const data = doc.data();
-                callback({
-                    titulo: data.titulo || "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
-                    subtitulo: data.subtitulo || "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
-                    descripcion: data.descripcion || "Productos Relojes Perfumes Ropas y calzados.",
+                callback({ 
+                    titulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama", 
+                    subtitulo: "ELEGANCIA Y DISTINCION",
+                    descripcion: "Piezas Exclusivas con altos estandares de calidad. Bienvenidos!.",
                     bannerText: data.bannerText || "",
                     aboutText: data.aboutText || "",
                     ...data
@@ -164,8 +164,8 @@ function fbSubscribeContent(callback) {
             } else {
                 callback({ 
                     titulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama", 
-                    subtitulo: "ELEGANCIA Y DISTINCION",
-                    descripcion: "Piezas Exclusivas con altos estandares de calidad. Bienvenidos!.",
+                    subtitulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
+                    descripcion: "Productos Relojes Perfumes Ropas y calzados.",
                     bannerText: "",
                     aboutText: ""
                 });
@@ -173,33 +173,6 @@ function fbSubscribeContent(callback) {
         }, (error) => {
             console.error("Error en tiempo real de contenido:", error);
         });
-}
-
-async function fbInitDataIfEmpty() {
-    if (!isFirestoreReady()) return;
-    try {
-        console.log("Firestore inicializado correctamente.");
-    } catch (e) {
-        console.error('Error inicializando Firestore:', e);
-    }
-}// Guardar Noticias
-async function fbSaveNews(news) {
-    if (!isFirestoreReady()) return false;
-    try {
-        await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_NEWS).set({
-            items: news,
-            news: news,
-            updatedAt: new Date().toISOString()
-        }, { merge: true });
-        return true;
-    } catch (e) {
-        console.error("Error al guardar noticias:", e);
-        return false;
-    }
-}
-
-async function hybridSaveNews(news) {
-    return await fbSaveNews(news);
 }
 
 // Guardar Contenido General
