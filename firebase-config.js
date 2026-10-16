@@ -42,3 +42,13 @@ function initFirebase() {
         return false;
     }
 }
+
+// Asegurar la inicialización y exposición global automática
+if (typeof initFirebase === 'function') {
+    initFirebase();
+}
+
+// Forzar exposición global por seguridad en la ventana del navegador
+if (typeof firebaseDb !== 'undefined' && firebaseDb) {
+    window.firebaseDb = firebaseDb;
+}
