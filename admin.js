@@ -548,8 +548,21 @@ function loadContentEditor() {
 // CONTENT EDITOR (Panel de Administración)
 // ==========================================
 async function loadContentEditor() {
-    // Usamos getContentAsync para asegurarnos de traer los datos reales de Firestore o localStorage
-    const c = await getContentAsync();
+    let c = {};
+    
+    // Intentamos traer los datos frescos directamente de Firestore; si falla o no está, usamos getContent() local
+    if (typeof fbLoadContent === 'function') {
+        try {
+            const cloudData = await fbLoadContent();
+            c = cloudData && Object.keys(cloudData).length > 0 ? cloudData : getContent();
+        } catch (e) {
+            console.warn("No se pudo cargar desde la nube, usando respaldo local:", e);
+            c = getContent();
+        }
+    } else {
+        c = getContent();
+    }
+
     const safeSet = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
     
     safeSet('heroSubtitleInput', c.heroSubtitle);
@@ -566,7 +579,7 @@ async function loadContentEditor() {
     safeSet('tiktokUrlInput', c.tiktokUrl);
     safeSet('instagramUrlInput', c.instagramUrl);
     
-    // Mapeo seguro de estadísticas
+    // Mapeo exacto de estadísticas
     safeSet('stat1ValueInput', c.stat1Value);
     safeSet('stat1LabelInput', c.stat1Label);
     safeSet('stat2ValueInput', c.stat2Value);
