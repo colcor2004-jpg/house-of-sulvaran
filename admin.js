@@ -544,37 +544,71 @@ function loadContentEditor() {
     const preview = document.getElementById('aboutImagePreview');
     if (preview && c.aboutImage) { preview.src = c.aboutImage; preview.classList.add('show'); }
 }
+// ==========================================
+// CONTENT EDITOR (Panel de Administración)
+// ==========================================
+async function loadContentEditor() {
+    // Usamos getContentAsync para asegurarnos de traer los datos reales de Firestore o localStorage
+    const c = await getContentAsync();
+    const safeSet = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+    
+    safeSet('heroSubtitleInput', c.heroSubtitle);
+    safeSet('heroTitleInput', c.heroTitle);
+    safeSet('heroDescInput', c.heroDesc);
+    safeSet('productsTitleInput', c.productsTitle);
+    safeSet('newsTitleInput', c.newsTitle);
+    safeSet('aboutTitleInput', c.aboutTitle);
+    safeSet('aboutText1Input', c.aboutText1);
+    safeSet('aboutText2Input', c.aboutText2);
+    safeSet('aboutImageInput', c.aboutImage);
+    safeSet('contactLocationInput', c.contactLocation);
+    safeSet('contactHoursInput', c.contactHours);
+    safeSet('tiktokUrlInput', c.tiktokUrl);
+    safeSet('instagramUrlInput', c.instagramUrl);
+    
+    // Mapeo seguro de estadísticas
+    safeSet('stat1ValueInput', c.stat1Value);
+    safeSet('stat1LabelInput', c.stat1Label);
+    safeSet('stat2ValueInput', c.stat2Value);
+    safeSet('stat2LabelInput', c.stat2Label);
+    safeSet('stat3ValueInput', c.stat3Value);
+    safeSet('stat3LabelInput', c.stat3Label);
+
+    const preview = document.getElementById('aboutImagePreview');
+    if (preview && c.aboutImage) { 
+        preview.src = c.aboutImage; 
+        preview.classList.add('show'); 
+    }
+}
 
 async function saveContent() {
     const c = {
-        heroSubtitle: document.getElementById('heroSubtitleInput').value,
-        heroTitle: document.getElementById('heroTitleInput').value,
-        heroDesc: document.getElementById('heroDescInput').value,
-        productsTitle: document.getElementById('productsTitleInput').value,
-        newsTitle: document.getElementById('newsTitleInput').value,
-        aboutTitle: document.getElementById('aboutTitleInput').value,
-        aboutText1: document.getElementById('aboutText1Input').value,
-        aboutText2: document.getElementById('aboutText2Input').value,
-        aboutImage: document.getElementById('aboutImageInput').value,
-        contactLocation: document.getElementById('contactLocationInput').value,
-        contactHours: document.getElementById('contactHoursInput').value,
-        tiktokUrl: document.getElementById('tiktokUrlInput').value,
-        instagramUrl: document.getElementById('instagramUrlInput').value,
-        stat1Value: document.getElementById('stat1ValueInput').value,
-        stat1Label: document.getElementById('stat1LabelInput').value,
-        stat2Value: document.getElementById('stat2ValueInput').value,
-        stat2Label: document.getElementById('stat2LabelInput').value,
-        stat3Value: document.getElementById('stat3ValueInput').value,
-        stat3Label: document.getElementById('stat3LabelInput').value
+        heroSubtitle: document.getElementById('heroSubtitleInput')?.value || '',
+        heroTitle: document.getElementById('heroTitleInput')?.value || '',
+        heroDesc: document.getElementById('heroDescInput')?.value || '',
+        productsTitle: document.getElementById('productsTitleInput')?.value || '',
+        newsTitle: document.getElementById('newsTitleInput')?.value || '',
+        aboutTitle: document.getElementById('aboutTitleInput')?.value || '',
+        aboutText1: document.getElementById('aboutText1Input')?.value || '',
+        aboutText2: document.getElementById('aboutText2Input')?.value || '',
+        aboutImage: document.getElementById('aboutImageInput')?.value || '',
+        contactLocation: document.getElementById('contactLocationInput')?.value || '',
+        contactHours: document.getElementById('contactHoursInput')?.value || '',
+        tiktokUrl: document.getElementById('tiktokUrlInput')?.value || '',
+        instagramUrl: document.getElementById('instagramUrlInput')?.value || '',
+        stat1Value: document.getElementById('stat1ValueInput')?.value || '',
+        stat1Label: document.getElementById('stat1LabelInput')?.value || '',
+        stat2Value: document.getElementById('stat2ValueInput')?.value || '',
+        stat2Label: document.getElementById('stat2LabelInput')?.value || '',
+        stat3Value: document.getElementById('stat3ValueInput')?.value || '',
+        stat3Label: document.getElementById('stat3LabelInput')?.value || ''
     };
 
     const savedToCloud = await hybridSaveContent(c);
     if (savedToCloud) {
         alert('✅ Contenido guardado en la NUBE. Todos los usuarios lo verán automáticamente.');
     } else {
-        if (saveContentObj(c)) {
-            alert('✅ Contenido guardado localmente.\n\n⚠️ Exporta data.js para compartir cambios con otros dispositivos.');
-        }
+        alert('⚠️ Error al guardar en la nube. Verifica tu conexión.');
     }
 }
 

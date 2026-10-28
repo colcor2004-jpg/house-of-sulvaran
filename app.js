@@ -349,8 +349,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof fbSubscribeProducts === 'function') {
         fbSubscribeProducts((productsList) => {
             cachedProducts = productsList || [];
-            renderProducts(); // Renderiza automáticamente en el index o catálogo
+            // Renderiza los primeros 6 destacados en la página de inicio
+            renderProducts(6); 
         });
+    } else {
+        // Respaldo inmediato por si Firebase tarda en responder
+        renderProducts(6);
     }
 
     // 3. Suscripción en tiempo real a Noticias
@@ -359,5 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cachedNews = newsList || defaultNews;
             renderNews();
         });
+    } else {
+        renderNews();
     }
 });
