@@ -548,18 +548,11 @@ function loadContentEditor() {
 // CONTENT EDITOR (Panel de Administración)
 // ==========================================
 async function loadContentEditor() {
+    // Priorizamos la caché global en vivo si ya cargó, de lo contrario usamos getContent() local
     let c = {};
-    
-    // Intentamos traer los datos frescos directamente de Firestore; si falla o no está, usamos getContent() local
-    if (typeof fbLoadContent === 'function') {
-        try {
-            const cloudData = await fbLoadContent();
-            c = cloudData && Object.keys(cloudData).length > 0 ? cloudData : getContent();
-        } catch (e) {
-            console.warn("No se pudo cargar desde la nube, usando respaldo local:", e);
-            c = getContent();
-        }
-    } else {
+    if (typeof cachedContent !== 'undefined' && cachedContent && Object.keys(cachedContent).length > 0) {
+        c = cachedContent;
+    } else if (typeof getContent === 'function') {
         c = getContent();
     }
 
@@ -617,11 +610,19 @@ async function saveContent() {
         stat3Label: document.getElementById('stat3LabelInput')?.value || ''
     };
 
+    // 1. Guardar localmente para que getContent() devuelva siempre lo último editado
+    if (typeof saveContentObj === 'function') {
+        saveContentObj(c);
+    } else {
+        localStorage.setItem('housesulvaran_content', JSON.stringify(c));
+    }
+
+    // 2. Sincronizar y guardar en la NUBE (Firestore)
     const savedToCloud = await hybridSaveContent(c);
     if (savedToCloud) {
-        alert('✅ Contenido guardado en la NUBE. Todos los usuarios lo verán automáticamente.');
+        alert('✅ Contenido guardado en la NUBE y actualizado localmente.');
     } else {
-        alert('⚠️ Error al guardar en la nube. Verifica tu conexión.');
+        alert('⚠️ Guardado localmente, pero hubo un problema al sincronizar con la nube.');
     }
 }
 
