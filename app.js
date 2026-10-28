@@ -93,7 +93,7 @@ function updateUIContent(c) {
     if (c.newsTitle) setText('newsTitle', c.newsTitle);
 
     // Sección Sobre Nosotros (Aquí se mapean las casillas que no aparecían)
-    if (c.aboutTitle) setHtml('aboutTitle', c.aboutTitle.replace(/(HOUSE OF SULVARAN|JS Prendas|JS Perfumeria)/g, '<span class="gold-text">$1</span>'));
+    if (c.aboutTitle) setHtml('aboutTitle', c.aboutTitle.replace(/(HOUSE OF SULVARAN||JS Perfumeria)/g, '<span class="gold-text">$1</span>'));
     if (c.aboutText1) setText('aboutText1', c.aboutText1);
     if (c.aboutText2) setText('aboutText2', c.aboutText2);
 
