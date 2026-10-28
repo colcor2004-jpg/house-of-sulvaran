@@ -18,7 +18,7 @@ async function fbLoadProducts() {
         const querySnapshot = await firebaseDb.collection('products').get();
         const products = [];
         querySnapshot.forEach((doc) => {
-            products.push(doc.data());
+            products.push({ id: doc.id, ...doc.data() });
         });
         return products;
     } catch (e) {
@@ -27,28 +27,25 @@ async function fbLoadProducts() {
     return [];
 }
 
-// Guardar Productos (Cada producto es un documento independiente + borrado de eliminados)
+// Guardar Productos
 async function fbSaveProducts(products) {
     if (!isFirestoreReady()) return false;
     try {
         const batch = firebaseDb.batch();
         const productsRef = firebaseDb.collection('products');
 
-        // 1. Obtener los IDs que ya están en la nube para limpiar los que se hayan borrado
         const snapshot = await productsRef.get();
         const existingIds = new Set();
         snapshot.forEach(doc => existingIds.add(doc.id));
 
         const newIds = new Set(products.map(p => String(p.id)));
 
-        // 2. Marcar para borrar en Firestore los productos que ya no están
         existingIds.forEach(id => {
             if (!newIds.has(id)) {
                 batch.delete(productsRef.doc(id));
             }
         });
 
-        // 3. Guardar/Actualizar cada producto en su propio documento
         for (const p of products) {
             const productId = p.id ? String(p.id) : String(Date.now());
             p.id = productId;
@@ -71,8 +68,7 @@ async function hybridSaveProducts(products) {
 // Suscripción de productos en tiempo real con reintento automático
 function fbSubscribeProducts(callback) {
     if (typeof firebaseDb === 'undefined' || !firebaseDb || !isFirestoreReady()) {
-        console.warn("Esperando a que Firebase esté listo para los productos...");
-        setTimeout(() => fbSubscribeProducts(callback), 1000); // Reintenta en 1 segundo
+        setTimeout(() => fbSubscribeProducts(callback), 1000);
         return null;
     }
 
@@ -91,6 +87,7 @@ function fbSubscribeProducts(callback) {
         console.error("No se pudo establecer la suscripción de productos:", e);
     }
 }
+
 // Cargar Noticias
 async function fbLoadNews() {
     if (!isFirestoreReady()) return null;
@@ -123,60 +120,33 @@ function fbSubscribeNews(callback) {
 
 // Cargar Contenido General
 async function fbLoadContent() {
-    if (!isFirestoreReady()) return { titulo: "", subtitulo: "", descripcion: "", bannerText: "", aboutText: "" };
+    if (!isFirestoreReady()) return {};
     try {
         const docRef = await firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_CONTENT).get();
         if (docRef.exists && docRef.data()) {
-            const data = docRef.data();
-            return {
-                titulo: data.titulo || "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
-                subtitulo: data.subtitulo || "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
-                descripcion: data.descripcion || "Productos Relojes Perfumes Ropas y calzados.",
-                bannerText: data.bannerText || "",
-                aboutText: data.aboutText || "",
-                ...data
-            };
+            return docRef.data();
         }
     } catch (e) {
         console.error("Error al cargar contenido:", e);
     }
-    return { 
-        titulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama", 
-        subtitulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
-        descripcion: "Productos Relojes Perfumes Ropas y calzados.",
-        bannerText: "",
-        aboutText: ""
-    };
+    return {};
 }
 
-// Suscripción de contenido
+// Suscripción de contenido con reintento automático y prioridad a los datos de la nube
 function fbSubscribeContent(callback) {
-    // Blindaje extra: si firebaseDb es nulo o indefinido, salimos sin romper la app
-    if (!isFirestoreReady() || typeof firebaseDb === 'undefined' || !firebaseDb) {
-        console.warn("Firebase DB aún no está inicializado para la suscripción.");
+    if (typeof firebaseDb === 'undefined' || !firebaseDb || !isFirestoreReady()) {
+        setTimeout(() => fbSubscribeContent(callback), 1000);
         return null;
     }
 
     return firebaseDb.collection(FB_COLLECTION).doc(FB_DOC_CONTENT)
         .onSnapshot((doc) => {
             if (doc.exists && doc.data()) {
-                const data = doc.data();
-                callback({ 
-                    titulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama", 
-                    subtitulo: "ELEGANCIA Y DISTINCION",
-                    descripcion: "Piezas Exclusivas con altos estandares de calidad. Bienvenidos!.",
-                    bannerText: data.bannerText || "",
-                    aboutText: data.aboutText || "",
-                    ...data
-                });
+                // Sepriorizan los datos de la nube sin sobreescribirlos con textos fijos
+                callback(doc.data());
             } else {
-                callback({ 
-                    titulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama", 
-                    subtitulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
-                    descripcion: "Productos Relojes Perfumes Ropas y calzados.",
-                    bannerText: "",
-                    aboutText: ""
-                });
+                fbInitDataIfEmpty();
+                callback({});
             }
         }, (error) => {
             console.error("Error en tiempo real de contenido:", error);
@@ -202,6 +172,7 @@ async function fbSaveContent(content) {
 async function hybridSaveContent(content) {
     return await fbSaveContent(content);
 }
+
 // Inicializar datos en Firestore si está vacío
 function fbInitDataIfEmpty() {
     if (typeof firebaseDb === 'undefined' || !firebaseDb) return;
@@ -210,11 +181,15 @@ function fbInitDataIfEmpty() {
     docRef.get().then((doc) => {
         if (!doc.exists) {
             docRef.set({
-                titulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
-                subtitulo: "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
-                descripcion: "Productos Relojes Perfumes Ropas y calzados.",
-                bannerText: "",
-                aboutText: ""
+                heroSubtitle: "Elegancia y Distinción",
+                heroTitle: "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
+                heroDesc: "Piezas Exclusivas con altos estandares de calidad. Bienvenidos!",
+                aboutTitle: "HOUSE OF SULVARAN",
+                aboutText1: "Somos tu destino de confianza para que adquieras tus relojes, perfumes, ropas y calzados de alta calidad en Venezuela.",
+                aboutText2: "Envíos a toda Venezuela. Atención personalizada por WhatsApp.",
+                stat1Value: "100%", stat1Label: "Originales",
+                stat2Value: "+500", stat2Label: "Clientes",
+                stat3Value: "24/7", stat3Label: "Atención"
             }).then(() => {
                 console.log("Documento inicial creado en Firestore con éxito.");
             }).catch((error) => {

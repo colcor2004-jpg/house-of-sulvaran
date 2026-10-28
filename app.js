@@ -1,5 +1,5 @@
 // ============================================
-// HOUSE OF SULVARAN - Main Application (v2 con Firebase Sync)
+// HOUSE OF SULVARAN - Main Application (v2 con Firebase Sync en Tiempo Real)
 // ============================================
 
 const defaultProducts = [];
@@ -32,54 +32,17 @@ const defaultContent = {
     stat3Label: "Atención"
 };
 
-let cachedProducts = null;
-let cachedNews = null;
-let cachedContent = null;
+let cachedProducts = [];
+let cachedNews = defaultNews;
+let cachedContent = defaultContent;
 
-// ═══════════════════════════════════════════════════════════
-// GETTERS: Firestore primero, luego SITE_DATA, luego localStorage
-// ═══════════════════════════════════════════════════════════
-async function getProductsAsync() {
-    if (cachedProducts) return cachedProducts;
-    const fb = await fbLoadProducts();
-    cachedProducts = (fb && Array.isArray(fb)) ? fb : [];
-    return cachedProducts;
-}
-
-async function getNewsAsync() {
-    if (cachedNews) return cachedNews;
-    const fb = await fbLoadNews();
-    if (fb) { cachedNews = fb; return fb; }
-    if (typeof window.SITE_DATA !== 'undefined' && window.SITE_DATA.news) {
-        return window.SITE_DATA.news;
-    }
-    const local = localStorage.getItem('housesulvaranNews');
-    if (local) { try { return JSON.parse(local); } catch(e) {} }
-    return defaultNews;
-}
-
-async function getContentAsync() {
-    if (cachedContent) return cachedContent;
-    const fb = await fbLoadContent();
-    if (fb) { cachedContent = fb; return fb; }
-    if (typeof window.SITE_DATA !== 'undefined' && window.SITE_DATA.content) {
-        return window.SITE_DATA.content;
-    }
-    const local = localStorage.getItem('housesulvaranContent');
-    if (local) { try { return JSON.parse(local); } catch(e) {} }
-    return defaultContent;
-}
-
-// Sync helpers para compatibilidad con código existente
-function getProducts() { return cachedProducts || defaultProducts; }
-function getNews() { return cachedNews || defaultNews; }
-function getContent() { return cachedContent || defaultContent; }
-
+// Formateadores y Utilidades Visuales
 function formatPrice(price) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(price);
 }
 
 function formatDate(dateStr) {
+    if (!dateStr) return '';
     const d = new Date(dateStr + 'T00:00:00');
     return d.toLocaleDateString('es-VE', { day: 'numeric', month: 'long', year: 'numeric' });
 }
@@ -102,15 +65,70 @@ function getStatusButton(status, productName) {
     return `<a href="https://wa.me/584241403937?text=Hola,%20estoy%20interesado%20en%20${encodeURIComponent(productName)}" target="_blank" class="product-btn" onclick="trackWhatsAppClick(event)">${text}</a>`;
 }
 
+// ==========================================
+// RENDERIZADO REACTIVO DEL CONTENIDO Y UI
+// ==========================================
+function updateUIContent(c) {
+    if (!c) return;
+    cachedContent = { ...defaultContent, ...c };
+
+    const setText = (id, val) => { 
+        const el = document.getElementById(id); 
+        if (el && val !== undefined && val !== null) el.textContent = val; 
+    };
+    const setHtml = (id, val) => { 
+        const el = document.getElementById(id); 
+        if (el && val !== undefined && val !== null) el.innerHTML = val; 
+    };
+    const setHref = (id, val) => { 
+        const el = document.getElementById(id); 
+        if (el && val !== undefined && val !== null) el.href = val; 
+    };
+
+    // Textos principales y banner
+    if (c.heroSubtitle) setText('heroSubtitle', c.heroSubtitle);
+    if (c.heroTitle) setHtml('heroTitle', c.heroTitle.replace(/(Alta Gama|alta gama)/g, '<span class="highlight">$1</span>'));
+    if (c.heroDesc) setText('heroDesc', c.heroDesc);
+    if (c.productsTitle) setText('productsTitle', c.productsTitle);
+    if (c.newsTitle) setText('newsTitle', c.newsTitle);
+
+    // Sección Sobre Nosotros (Aquí se mapean las casillas que no aparecían)
+    if (c.aboutTitle) setHtml('aboutTitle', c.aboutTitle.replace(/(HOUSE OF SULVARAN|JS Prendas|JS Perfumeria)/g, '<span class="gold-text">$1</span>'));
+    if (c.aboutText1) setText('aboutText1', c.aboutText1);
+    if (c.aboutText2) setText('aboutText2', c.aboutText2);
+
+    // Contacto y Redes
+    if (c.contactLocation) setText('contactLocation', c.contactLocation);
+    if (c.contactHours) setText('contactHours', c.contactHours);
+    if (c.tiktokUrl) {
+        setHref('tiktokLink', c.tiktokUrl);
+        setHref('footerTiktok', c.tiktokUrl);
+    }
+    if (c.instagramUrl) {
+        setHref('instagramLink', c.instagramUrl);
+        setHref('footerInstagram', c.instagramUrl);
+    }
+
+    // Estadísticas / Contadores
+    if (c.stat1Value) setText('stat1Value', c.stat1Value);
+    if (c.stat1Label) setText('stat1Label', c.stat1Label);
+    if (c.stat2Value) setText('stat2Value', c.stat2Value);
+    if (c.stat2Label) setText('stat2Label', c.stat2Label);
+    if (c.stat3Value) setText('stat3Value', c.stat3Value);
+    if (c.stat3Label) setText('stat3Label', c.stat3Label);
+}
+
 function renderProducts(limit = null) {
     const grid = document.getElementById('productsGrid');
     if (!grid) return;
-    let products = getProducts();
+    let products = cachedProducts;
     if (limit) products = products.slice(0, limit);
-    if (products.length === 0) {
+    
+    if (!products || products.length === 0) {
         grid.innerHTML = '<p style="text-align:center;color:var(--gray);grid-column:1/-1;padding:2rem;">No hay productos disponibles en este momento.</p>';
         return;
     }
+
     grid.innerHTML = products.map(p => {
         const images = p.images || (p.image ? [p.image] : []);
         const mainImg = images[0] || 'https://images.unsplash.com/photo-1612817159949-195b6eb9e31a?w=600&q=80';
@@ -139,9 +157,30 @@ function renderProducts(limit = null) {
                 </div>
             </div>
         </div>
-    `}).join('');
+    `;
+    }).join('');
 }
 
+function renderNews() {
+    const grid = document.getElementById('newsGrid');
+    if (!grid) return;
+    const news = cachedNews;
+    if (!news || news.length === 0) {
+        grid.innerHTML = '<p class="no-news">No hay noticias o promociones en este momento.</p>';
+        return;
+    }
+    const sorted = [...news].sort((a, b) => new Date(b.date) - new Date(a.date));
+    grid.innerHTML = sorted.map(n => `
+        <div class="news-card fade-in">
+            <span class="news-badge">${n.category}</span>
+            <p class="news-date">${formatDate(n.date)}</p>
+            <h3 class="news-title">${n.title}</h3>
+            <p class="news-excerpt">${n.content}</p>
+        </div>
+    `).join('');
+}
+
+// Lightbox para galería de productos
 function swapProductImage(thumb) {
     const card = thumb.closest('.product-card');
     const mainImg = card.querySelector('.product-image');
@@ -198,97 +237,7 @@ function updateLightbox() {
     if (counter) counter.textContent = (window.lightboxIndex + 1) + ' / ' + window.lightboxImages.length;
 }
 
-function renderNews() {
-    const grid = document.getElementById('newsGrid');
-    if (!grid) return;
-    const news = getNews();
-    if (news.length === 0) {
-        grid.innerHTML = '<p class="no-news">No hay noticias o promociones en este momento.</p>';
-        return;
-    }
-    const sorted = [...news].sort((a, b) => new Date(b.date) - new Date(a.date));
-    grid.innerHTML = sorted.map(n => `
-        <div class="news-card fade-in">
-            <span class="news-badge">${n.category}</span>
-            <p class="news-date">${formatDate(n.date)}</p>
-            <h3 class="news-title">${n.title}</h3>
-            <p class="news-excerpt">${n.content}</p>
-        </div>
-    `).join('');
-}
-
-async function loadContent() {
-    let c = null;
-
-    // 1. Intentar cargar directamente desde la nube de Firebase
-    if (typeof isFirestoreReady === 'function' && isFirestoreReady() && typeof firebaseDb !== 'undefined') {
-        try {
-            const docRef = await firebaseDb.collection("housesulvaran_data").doc("content").get();
-            if (docRef.exists && docRef.data()) {
-                c = docRef.data();
-                localStorage.setItem('housesulvaranContent', JSON.stringify(c));
-            }
-        } catch (e) {
-            console.log("No se pudo conectar a la nube, usando respaldo local.");
-        }
-    }
-
-    // 2. Si la nube no respondió, usar localStorage
-    if (!c) {
-        const local = localStorage.getItem('housesulvaranContent');
-        if (local) {
-            try { c = JSON.parse(local); } catch(e) {}
-        }
-    }
-
-    // 3. Si aún no hay nada, usar valores por defecto
-    if (!c && typeof getContent === 'function') {
-        c = getContent();
-    }
-
-    if (!c) return;
-
-    const setText = (id, val) => { 
-        if (val !== undefined && val !== null && val !== "") {
-            const el = document.getElementById(id); 
-            if (el) el.textContent = val; 
-        }
-    };
-    const setHtml = (id, val) => { 
-        if (val !== undefined && val !== null && val !== "") {
-            const el = document.getElementById(id); 
-            if (el) el.innerHTML = val; 
-        }
-    };
-    const setHref = (id, val) => { 
-        if (val !== undefined && val !== null && val !== "") {
-            const el = document.getElementById(id); 
-            if (el) el.href = val; 
-        }
-    };
-
-    if (c.heroSubtitle) setText('heroSubtitle', c.heroSubtitle);
-    if (c.heroTitle) setHtml('heroTitle', c.heroTitle.replace(/(Alta Gama|alta gama)/g, '<span class="highlight">$1</span>'));
-    if (c.heroDesc) setText('heroDesc', c.heroDesc);
-    if (c.productsTitle) setText('productsTitle', c.productsTitle);
-    if (c.newsTitle) setText('newsTitle', c.newsTitle);
-    if (c.aboutTitle) setHtml('aboutTitle', c.aboutTitle.replace(/(HOUSE OF SULVARAN|JS Prendas|JS Perfumeria)/g, '<span class="gold-text">$1</span>'));
-    
-    if (c.aboutText1) setText('aboutText1', c.aboutText1);
-    if (c.aboutText2) setText('aboutText2', c.aboutText2);
-
-    if (c.contactLocation) setText('contactLocation', c.contactLocation);
-    if (c.contactHours) setText('contactHours', c.contactHours);
-    if (c.tiktokUrl) {
-        setHref('tiktokLink', c.tiktokUrl);
-        setHref('footerTiktok', c.tiktokUrl);
-    }
-    if (c.instagramUrl) {
-        setHref('instagramLink', c.instagramUrl);
-        setHref('footerInstagram', c.instagramUrl);
-    }
-}
-
+// Gestión de Sesión de Usuario
 function checkLoginState() {
     const user = JSON.parse(localStorage.getItem('housesulvaranUser'));
     const loginBtn = document.getElementById('loginBtn');
@@ -300,14 +249,14 @@ function checkLoginState() {
         loginBtn.textContent = user.name || 'Mi Cuenta';
         loginBtn.href = '#';
         loginBtn.onclick = () => { };
-        logoutBtn.classList.remove('hidden');
-        if (user.role === 'admin') adminBtn.classList.remove('hidden');
+        if (logoutBtn) logoutBtn.classList.remove('hidden');
+        if (user.role === 'admin' && adminBtn) adminBtn.classList.remove('hidden');
     } else {
         loginBtn.textContent = 'Ingresar';
         loginBtn.href = 'login.html';
         loginBtn.onclick = null;
-        adminBtn.classList.add('hidden');
-        logoutBtn.classList.add('hidden');
+        if (adminBtn) adminBtn.classList.add('hidden');
+        if (logoutBtn) logoutBtn.classList.add('hidden');
     }
 }
 
@@ -343,17 +292,7 @@ function initSmoothScroll() {
     });
 }
 
-function loadStats() {
-    const c = getContent();
-    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-    setText('stat1Value', c.stat1Value);
-    setText('stat1Label', c.stat1Label);
-    setText('stat2Value', c.stat2Value);
-    setText('stat2Label', c.stat2Label);
-    setText('stat3Value', c.stat3Value);
-    setText('stat3Label', c.stat3Label);
-}
-
+// Control de IP y Contador de Clicks en WhatsApp
 async function getVisitorIP() {
     try {
         const res = await fetch('https://api.ipify.org?format=json');
@@ -383,35 +322,42 @@ async function trackWhatsAppClick(event) {
             count++;
             localStorage.setItem(key, JSON.stringify(ips));
             localStorage.setItem(counterKey, count);
-
-            const c = getContent();
-            if (c.stat2Label === 'Clientes' || c.stat2Label === 'Consultas') {
-                c.stat2Value = '+' + count;
-                const currentContent = JSON.parse(localStorage.getItem('housesulvaranContent')) || defaultContent;
-                currentContent.stat2Value = '+' + count;
-                localStorage.setItem('housesulvaranContent', JSON.stringify(currentContent));
-                loadStats();
-            }
         }
     } catch (e) {
         console.error('Error tracking WhatsApp click:', e);
     }
 }
 
+// ==========================================
+// INICIALIZACIÓN Y SUSCRIPCIÓN EN TIEMPO REAL
+// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-    if (typeof loadContent === 'function') {
-        loadContent();
-    }
+    checkLoginState();
+    initNavbar();
+    initSmoothScroll();
 
+    // 1. Suscripción en tiempo real al Contenido General y "Sobre Nosotros"
     if (typeof fbSubscribeContent === 'function') {
         fbSubscribeContent((c) => {
-            if (!c) return;
-            const setText = (id, val) => { const el = document.getElementById(id); if (el && val) el.textContent = val; };
-            const setHtml = (id, val) => { const el = document.getElementById(id); if (el && val) el.innerHTML = val; };
+            if (c) {
+                updateUIContent(c);
+            }
+        });
+    }
 
-            if (c.heroSubtitle) setText('heroSubtitle', c.heroSubtitle);
-            if (c.heroTitle) setHtml('heroTitle', c.heroTitle);
-            if (c.heroDesc) setText('heroDesc', c.heroDesc);
+    // 2. Suscripción en tiempo real al Catálogo de Productos
+    if (typeof fbSubscribeProducts === 'function') {
+        fbSubscribeProducts((productsList) => {
+            cachedProducts = productsList || [];
+            renderProducts(); // Renderiza automáticamente en el index o catálogo
+        });
+    }
+
+    // 3. Suscripción en tiempo real a Noticias
+    if (typeof fbSubscribeNews === 'function') {
+        fbSubscribeNews((newsList) => {
+            cachedNews = newsList || defaultNews;
+            renderNews();
         });
     }
 });
