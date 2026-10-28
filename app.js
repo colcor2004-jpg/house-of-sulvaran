@@ -13,7 +13,7 @@ const defaultNews = [
 const defaultContent = {
     heroSubtitle: "Elegancia y Distinción",
     heroTitle: "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
-    heroDesc: "Productos de lujo seleccionados con criterio exigente: relojes, perfumes, ropa y calzado. Pagos mediante transferencias, pago móvil, divisas y USDT. Envíos a toda Venezuela.",
+    heroDesc: "Piezas Exclusivas con altos estándares de calidad y Elegancia. ¡Bienvenidos!",
     productsTitle: "Productos Destacados",
     newsTitle: "Noticias y Promociones",
     aboutTitle: "HOUSE OF SULVARAN",
@@ -24,12 +24,12 @@ const defaultContent = {
     contactHours: "Lunes a Domingo - 24 horas",
     tiktokUrl: "https://www.tiktok.com/@house.sulvaran",
     instagramUrl: "https://www.instagram.com/houseofsulvaran/",
-    stat1Value: "100%",
-    stat1Label: "Originales",
-    stat2Value: "+500",
-    stat2Label: "Clientes",
-    stat3Value: "24/7",
-    stat3Label: "Atención"
+    stat1Value: "",
+    stat1Label: "",
+    stat2Value: "",
+    stat2Label: "",
+    stat3Value: "",
+    stat3Label: ""
 };
 
 let cachedProducts = [];
