@@ -122,8 +122,17 @@ function renderProducts(limit = null) {
     const grid = document.getElementById('productsGrid');
     if (!grid) return;
     let products = cachedProducts;
+
+    // DETECCIÓN INTELIGENTE: Si no se pasa un límite explícito y estamos en el Inicio, limitar a 6
+    if (!limit) {
+        const path = window.location.pathname;
+        if (path.endsWith('index.html') || path === '/' || path.endsWith('/house-of-sulvaran/') || path.endsWith('/house-of-sulvaran')) {
+            limit = 6;
+        }
+    }
+
     if (limit) products = products.slice(0, limit);
-    
+
     if (!products || products.length === 0) {
         grid.innerHTML = '<p style="text-align:center;color:var(--gray);grid-column:1/-1;padding:2rem;">No hay productos disponibles en este momento.</p>';
         return;
@@ -160,7 +169,6 @@ function renderProducts(limit = null) {
     `;
     }).join('');
 }
-
 function renderNews() {
     const grid = document.getElementById('newsGrid');
     if (!grid) return;
