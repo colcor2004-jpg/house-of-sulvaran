@@ -13,7 +13,7 @@ const defaultNews = [
 const defaultContent = {
     heroSubtitle: "Elegancia y Distinción",
     heroTitle: "Relojes y Perfumes de Alta Gama",
-    heroDesc: "Descubre nuestra exclusiva selección de relojes de lujo y fragancias importadas. Calidad garantizada y precios competitivos en toda Venezuela.",
+    heroDesc: "Piezas Exclusivas con altos estándares de calidad y Elegancia. ¡Bienvenidos!",n toda
     productsTitle: "Productos Destacados",
     newsTitle: "Noticias y Promociones",
     aboutTitle: "HOUSE OF SULVARAN",
