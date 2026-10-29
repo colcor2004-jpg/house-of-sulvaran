@@ -25,7 +25,7 @@ window.SITE_DATA = {
         aboutText2: "Envíos a toda Venezuela. Atención personalizada por WhatsApp. Pagos mediante transferencias, pago móvil, divisas y USDT. Productos con garantía de satisfacción.",
         aboutImage: "https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=800&q=80",
         contactLocation: "Venezuela - Envíos a todo el país",
-        contactHours: "Lunes a Domingo - 24 horas",
+        contactHours: "Lunes a Sabado-8:00AM a 6:00PM",
         tiktokUrl: "https://www.tiktok.com/@house.sulvaran",
         instagramUrl: "https://www.instagram.com/houseofsulvaran/",
         stat1Value: "",
