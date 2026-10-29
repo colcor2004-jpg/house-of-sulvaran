@@ -22,7 +22,7 @@ window.SITE_DATA = {
         newsTitle: "Noticias y Promociones",
         aboutTitle: "HOUSE OF SULVARAN",
         aboutText1: "Somos tu destino de confianza para relojes, perfumes, ropa y calzado de alta gama en Venezuela. Cada pieza es seleccionada con criterio exigente para ofrecerte solo lo mejor del mercado internacional.",
-        aboutText2: "Envíos a toda Venezuela. Atención personalizada por WhatsApp. Pagos mediante transferencias, pago móvil, divisas y USDT. Productos con garantía de satisfacción.",
+        aboutText2: "Envíos a toda Venezuela. Atención personalizada por WhatsApp. ",
         aboutImage: "https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=800&q=80",
         contactLocation: "Venezuela - Envíos a todo el país",
         contactHours: "Lunes a Sabado-8:00AM a 6:00PM",

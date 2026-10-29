@@ -7,7 +7,7 @@ const defaultProducts = [];
 const defaultNews = [
     { id: 1, title: "¡Nueva colección de relojes suizos disponible!", category: "Novedad", content: "Acabamos de recibir la nueva temporada de relojes suizos. Modelos exclusivos con precios especiales por tiempo limitado. Contáctanos por WhatsApp para más información.", date: "2026-08-15" },
     { id: 2, title: "Promoción: 15% de descuento en perfumes", category: "Promoción", content: "Por esta semana, todos nuestros perfumes de alta gama tienen un 15% de descuento. Aprovecha y lleva tu fragancia favorita a un precio increíble. Válido hasta agotar existencias.", date: "2026-08-10" },
-    { id: 3, title: "Envíos disponibles a todo Venezuela", category: "Información", content: "Ahora realizamos envíos seguros a todas las ciudades de Venezuela. Pagos mediante transferencia, Pago Móvil y Zelle. Tu pedido llega en 3-5 días hábiles.", date: "2026-08-05" }
+    { id: 3, title: "Envíos disponibles a todo Venezuela", category: "Información", content: "", date: "2026-08-05" }
 ];
 
 const defaultContent = {
