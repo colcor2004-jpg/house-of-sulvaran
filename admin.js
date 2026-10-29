@@ -13,7 +13,7 @@ const defaultNews = [
 const defaultContent = {
     heroSubtitle: "Elegancia y Distinción",
     heroTitle: "Relojes y Perfumes de Alta Gama",
-    heroDesc: "Piezas Exclusivas con altos estándares de calidad y Elegancia. ¡Bienvenidos!",n toda
+    heroDesc: "Piezas Exclusivas con altos estándares de calidad y Elegancia. ¡Bienvenidos!",
     productsTitle: "Productos Destacados",
     newsTitle: "Noticias y Promociones",
     aboutTitle: "HOUSE OF SULVARAN",
