@@ -182,14 +182,14 @@ function fbInitDataIfEmpty() {
         if (!doc.exists) {
             docRef.set({
                 heroSubtitle: "Elegancia y Distinción",
-                heroTitle: "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
+                heroTitle: "",
                 heroDesc: "Piezas Exclusivas con altos estandares de calidad. Bienvenidos!",
                 aboutTitle: "HOUSE OF SULVARAN",
                 aboutText1: "Somos tu destino de confianza para que adquieras tus relojes, perfumes, ropas y calzados de alta calidad en Venezuela.",
                 aboutText2: "Envíos a toda Venezuela. Atención personalizada por WhatsApp.",
-                stat1Value: "100%", stat1Label: "Originales",
-                stat2Value: "+500", stat2Label: "Clientes",
-                stat3Value: "24/7", stat3Label: "Atención"
+                stat1Value: "", stat1Label: "",
+                stat2Value: "", stat2Label: "",
+                stat3Value: "", stat3Label: ""
             }).then(() => {
                 console.log("Documento inicial creado en Firestore con éxito.");
             }).catch((error) => {

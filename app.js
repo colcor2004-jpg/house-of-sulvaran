@@ -12,13 +12,13 @@ const defaultNews = [
 
 const defaultContent = {
     heroSubtitle: "Elegancia y Distinción",
-    heroTitle: "Relojes, Perfumes, Ropa y Calzado de Alta Gama",
+    heroTitle: "",
     heroDesc: "Piezas Exclusivas con altos estándares de calidad y Elegancia. ¡Bienvenidos!",
     productsTitle: "Productos Destacados",
     newsTitle: "Noticias y Promociones",
     aboutTitle: "HOUSE OF SULVARAN",
     aboutText1: "Somos tu destino de confianza para relojes, perfumes, ropa y calzado de alta gama en Venezuela. Cada pieza es seleccionada con criterio exigente para ofrecerte solo lo mejor del mercado internacional.",
-    aboutText2: "Envíos a toda Venezuela. Atención personalizada por WhatsApp. Pagos mediante transferencias, pago móvil, divisas y USDT. Productos 100% originales con garantía de satisfacción.",
+    aboutText2: "",
     aboutImage: "https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=800&q=80",
     contactLocation: "Venezuela - Envíos a todo el país",
     contactHours: "Lunes a Domingo - 24 horas",
@@ -87,7 +87,7 @@ function updateUIContent(c) {
 
     // Textos principales y banner
     if (c.heroSubtitle) setText('heroSubtitle', c.heroSubtitle);
-    if (c.heroTitle) setHtml('heroTitle', c.heroTitle.replace(/(Alta Gama|alta gama)/g, '<span class="highlight">$1</span>'));
+    if (c.heroTitle) setHtml('heroTitle', c.heroTitle.replace(/( |)/g, '<span class="highlight">$1</span>'));
     if (c.heroDesc) setText('heroDesc', c.heroDesc);
     if (c.productsTitle) setText('productsTitle', c.productsTitle);
     if (c.newsTitle) setText('newsTitle', c.newsTitle);

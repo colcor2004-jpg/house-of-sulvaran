@@ -12,13 +12,13 @@ const defaultNews = [
 
 const defaultContent = {
     heroSubtitle: "Elegancia y Distinción",
-    heroTitle: "Relojes y Perfumes de Alta Gama",
+    heroTitle: "",
     heroDesc: "Piezas Exclusivas con altos estándares de calidad y Elegancia. ¡Bienvenidos!",
     productsTitle: "Productos Destacados",
     newsTitle: "Noticias y Promociones",
     aboutTitle: "HOUSE OF SULVARAN",
     aboutText1: "Somos tu destino de confianza para relojes y perfumes de alta gama en Venezuela. Seleccionamos cada pieza con criterio exigente para ofrecerte solo lo mejor del mercado.",
-    aboutText2: "Envíos a toda Venezuela. Atención personalizada por WhatsApp. Productos 100% originales con garantía de satisfacción.",
+    aboutText2: "Envíos a toda Venezuela. Atención personalizada por WhatsApp. Productos con garantía de satisfacción.",
     aboutImage: "https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=800&q=80",
     contactLocation: "Venezuela - Envíos a todo el país",
     contactHours: "Lunes a Domingo - 24 horas",
