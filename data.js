@@ -16,7 +16,7 @@ window.SITE_DATA = {
     ],
     content: {
         heroSubtitle: "Elegancia y Distinción",
-        heroTitle: "",
+        heroTitle: "Relojes, Perfumes, Ropas y Calzados ",
         heroDesc: "Productos de lujo seleccionados con criterio exigente: relojes, perfumes, ropa y calzado. Pagos mediante transferencias, pago móvil, divisas y USDT. Envíos a toda Venezuela.",
         productsTitle: "Productos Destacados",
         newsTitle: "Noticias y Promociones",

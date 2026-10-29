@@ -182,7 +182,7 @@ function fbInitDataIfEmpty() {
         if (!doc.exists) {
             docRef.set({
                 heroSubtitle: "Elegancia y Distinción",
-                heroTitle: "",
+                heroTitle: "Relojes, Perfumes, Ropas y Calzados ",
                 heroDesc: "Piezas Exclusivas con altos estandares de calidad. Bienvenidos!",
                 aboutTitle: "HOUSE OF SULVARAN",
                 aboutText1: "Somos tu destino de confianza para que adquieras tus relojes, perfumes, ropas y calzados de alta calidad en Venezuela.",

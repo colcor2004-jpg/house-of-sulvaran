@@ -12,7 +12,7 @@ const defaultNews = [
 
 const defaultContent = {
     heroSubtitle: "Elegancia y Distinción",
-    heroTitle: "",
+    heroTitle: "Relojes, Perfumes, Ropas y Calzados ",
     heroDesc: "Piezas Exclusivas con altos estándares de calidad y Elegancia. ¡Bienvenidos!",
     productsTitle: "Productos Destacados",
     newsTitle: "Noticias y Promociones",
